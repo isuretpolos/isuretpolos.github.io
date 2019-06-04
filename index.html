@@ -26,7 +26,7 @@
                 <a class="nav-link" href="https://github.com/isuretpolos/isuretpolos.github.io">Github</a>
             </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0">
+        <form class="form-inline my-2 my-lg-0" action="">
             <input class="form-control mr-sm-2" type="search" placeholder="Intention" aria-label="Search">
             <button class="btn btn-outline-success my-2 my-sm-0" id="analyzeButton">Analyze</button>
         </form>
@@ -801,7 +801,8 @@
                 }
             });
 
-            $('#analyzeButton').click(function () {
+            $('#analyzeButton').click(function (e) {
+                e.preventDefault();
                 console.log('begin analysis');
                 aetherone.analysingTempResult = new Map();
                 aetherone.analysisResult = null;
