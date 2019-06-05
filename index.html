@@ -9,6 +9,55 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            position: relative;
+            background: #222;
+            font-family: "Open Sans";
+        }
+
+        #wrap {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #wrap p {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            color: rgba(255, 255, 255, .5);
+            font-size: 30px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            text-align: center;
+        }
+
+        .ball {
+            pointer-events: none;
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: gray;
+            animation: implode 1s ease-in-out;
+            animation-fill-mode: both;
+            opacity: .5;
+        }
+
+        @keyframes implode {
+            100% {
+                transform: scale(0)
+            }
+        }
+    </style>
+
     <title>Isuret Polos - Radionics Analysis Prototype</title>
 </head>
 <body>
@@ -36,7 +85,8 @@
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0" action="">
-            <input id="intention" class="form-control mr-sm-2" type="search" placeholder="Intention" aria-label="Search">
+            <input id="intention" class="form-control mr-sm-2" type="search" placeholder="Intention"
+                   aria-label="Search">
             <button class="btn btn-outline-success my-2 my-sm-0" id="analyzeButton">Analyze</button>
         </form>
     </div>
@@ -762,81 +812,81 @@
             });
         }
 
-        $(document).ready(function () {
-            console.log("init ...");
+        console.log("init ...");
 
-            $('#content').mousemove(function (event) {
-                var d = new Date();
-                var n = d.getTime();
-                var seed = event.pageX * event.pageY * n;
-                var randomNumber = aetherone.getRandomInt(seed, 1, rates.length);
-                //console.log(event.pageX + ',' + event.pageY + ' [' + n + '] = ' + seed + ' (seed) randomNumber = ' + randomNumber);
-                //console.log(rates[randomNumber]);
+        $('#content').mousemove(function (event) {
+            var d = new Date();
+            var n = d.getTime();
+            var seed = event.pageX * event.pageY * n;
+            var randomNumber = aetherone.getRandomInt(seed, 1, rates.length);
+            //console.log(event.pageX + ',' + event.pageY + ' [' + n + '] = ' + seed + ' (seed) randomNumber = ' + randomNumber);
+            //console.log(rates[randomNumber]);
 
-                if (aetherone.analysingTempResult == null) {
+            if (aetherone.analysingTempResult == null) {
+                return;
+            }
+
+            if (aetherone.analysingTempResult.has(rates[randomNumber])) {
+                var value = aetherone.analysingTempResult.get(rates[randomNumber]) + 1;
+
+                if (aetherone.highestScore < value) {
+                    aetherone.highestScore = value;
+                    $('#progressBar').html(aetherone.highestScore);
+                    $('#progressBar').animate({'width': ($('.progress-bar').parent().width()) + 'px'}, 3000);
+                }
+
+                aetherone.analysingTempResult.set(rates[randomNumber], value);
+
+                if (aetherone.highestScore >= aetherone.maxHit) {
+                    aetherone.analysingTempResult[Symbol.iterator] = function* () {
+                        yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
+                    };
+
+                    aetherone.analysisResult = '';
+
+                    extractResult(aetherone.maxHit);
+                    extractResult(aetherone.maxHit - 1);
+                    extractResult(aetherone.maxHit - 2);
+
+                    aetherone.analysisResult = '<p style="color:WHITE"><b>Analysis result:</b></p>' + aetherone.analysisResult;
+
+                    $('#content').html(aetherone.analysisResult);
+                    aetherone.analysingTempResult = null;
+                    aetherone.analysisResult = null;
+
+                    $('.materia-medica').click(function (e) {
+                        let txt = $(e.target).text().trim();
+                        txt = txt.substr(1, txt.indexOf(']') - 1);
+                        txt = txt.toLowerCase();
+                        let firstCharacter = txt.substr(0, 1);
+                        let url = 'http://homeoint.org/books/boericmm/' + firstCharacter + '/' + txt + '.htm';
+                        window.open(url, '_blank');
+                    });
+
                     return;
                 }
 
-                if (aetherone.analysingTempResult.has(rates[randomNumber])) {
-                    var value = aetherone.analysingTempResult.get(rates[randomNumber]) + 1;
-
-                    if (aetherone.highestScore < value) {
-                        aetherone.highestScore = value;
-                        $('#progressBar').html(aetherone.highestScore);
-                        $('#progressBar').animate({'width':($('.progress-bar').parent().width())+'px'}, 3000);
-                    }
-
-                    aetherone.analysingTempResult.set(rates[randomNumber], value);
-
-                    if (aetherone.highestScore >= aetherone.maxHit) {
-                        aetherone.analysingTempResult[Symbol.iterator] = function* () {
-                            yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
-                        };
-
-                        aetherone.analysisResult = '';
-
-                        extractResult(aetherone.maxHit);
-                        extractResult(aetherone.maxHit - 1);
-                        extractResult(aetherone.maxHit - 2);
-
-                        $('#content').html(aetherone.analysisResult);
-                        aetherone.analysingTempResult = null;
-                        aetherone.analysisResult = null;
-
-                        $('.materia-medica').click(function (e) {
-                            let txt = $(e.target).text().trim();
-                            txt = txt.substr(1, txt.indexOf(']') - 1);
-                            txt = txt.toLowerCase();
-                            let firstCharacter = txt.substr(0,1);
-                            let url = 'http://homeoint.org/books/boericmm/' + firstCharacter + '/' + txt + '.htm';
-                            window.open(url,'_blank');
-                        });
-
-                        return;
-                    }
-
-                } else {
-                    aetherone.analysingTempResult.set(rates[randomNumber], 1);
-                }
-            });
-
-            $('#analyzeButton').click(function (e) {
-                e.preventDefault();
-                console.log('begin analysis');
-                aetherone.analysingTempResult = new Map();
-                aetherone.analysisResult = null;
-                aetherone.highestScore = 0;
-
-                let progressBar = '<span style="color:WHITE">Move your mouse over the black background (stick plate) until it analysis ends.</span>' +
-                    '<div class="progress">\n' +
-                    '  <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>\n' +
-                    '</div>' +
-                    '<span style="color:ORANGE">Intention: </span><span style="color:YELLOW">' + $('#intention').val() + '</span>';
-                $('#content').html(progressBar);
-            });
-
-            console.log("... init end");
+            } else {
+                aetherone.analysingTempResult.set(rates[randomNumber], 1);
+            }
         });
+
+        $('#analyzeButton').click(function (e) {
+            e.preventDefault();
+            console.log('begin analysis');
+            aetherone.analysingTempResult = new Map();
+            aetherone.analysisResult = null;
+            aetherone.highestScore = 0;
+
+            let progressBar = '<span style="color:WHITE">Move your mouse over the black background (stick plate) until it analysis ends.</span>' +
+                '<div class="progress">\n' +
+                '  <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>\n' +
+                '</div>' +
+                '<span style="color:ORANGE">Intention: </span><span style="color:YELLOW">' + $('#intention').val() + '</span>';
+            $('#content').html(progressBar);
+        });
+
+        console.log("... init end");
     };
 
     aetherone.getRandomInt = function (seed, min, max) {
@@ -855,7 +905,51 @@
         return Math.floor(number * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
     };
 
-    aetherone.init();
+    var mousePos = {};
+
+    function getRandomInt(min, max) {
+        return Math.round(Math.random() * (max - min + 1)) + min;
+    }
+
+    $(window).mousemove(function (e) {
+        mousePos.x = e.pageX;
+        mousePos.y = e.pageY;
+    });
+
+    $(window).mouseleave(function (e) {
+        mousePos.x = -1;
+        mousePos.y = -1;
+    });
+
+    var draw = setInterval(function () {
+
+        if (aetherone.analysingTempResult == null) {
+            return;
+        }
+
+        if (mousePos.x > 0 && mousePos.y > 0) {
+
+            var range = 15;
+
+            var color = "background: rgb(" + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + ");";
+
+            var sizeInt = getRandomInt(10, 30);
+            size = "height: " + sizeInt + "px; width: " + sizeInt + "px;";
+
+            var left = "left: " + getRandomInt(mousePos.x - range - sizeInt, mousePos.x + range) + "px;";
+
+            var top = "top: " + getRandomInt(mousePos.y - range - sizeInt, mousePos.y + range) + "px;";
+
+            var style = left + top + color + size;
+            $("<div class='ball' style='" + style + "'></div>").appendTo('#content').one("webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend", function () {
+                $(this).remove();
+            });
+        }
+    }, 1);
+
+    $(document).ready(function () {
+        aetherone.init();
+    });
 </script>
 </body>
 </html>
