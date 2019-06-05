@@ -84,10 +84,15 @@
                 <a class="nav-link" target="4" href="https://isuretpolos.wordpress.com/literature/">Literature</a>
             </li>
         </ul>
-        <form class="form-inline my-2 my-lg-0" action="">
-            <input id="intention" class="form-control mr-sm-2" type="search" placeholder="Intention"
+        <form class="form-inline my-3 my-lg-0" action="">
+            <input id="intention" class="form-control mr-sm-3" type="search" placeholder="Intention"
                    aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0" id="analyzeButton">Analyze</button>
+            <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                <div class="btn-group mr-2" role="group" aria-label="First group">
+                    <button class="btn btn-outline-success my-3 my-sm-0" id="analyzeButton">Analyze</button>
+                    <button class="btn btn-outline-success my-3 my-sm-0" id="clearButton">Clear</button>
+                </div>
+            </div>
         </form>
     </div>
 </nav>
@@ -96,8 +101,6 @@
 
 </div>
 
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
@@ -810,7 +813,16 @@
                     aetherone.analysingTempResult.delete(rateName);
                 }
             });
-        }
+        };
+
+        function clear() {
+            aetherone.analysingTempResult = null;
+            aetherone.analysisResult = null;
+            aetherone.highestScore = 0;
+
+            let txt = '<span style="color:WHITE">Write your intention in the input field, click on the Analyze button and then use your mouse as a stick pad moving it around.<br>The software will recognize the stick factor and include it in the analysis of each rate from the Boericke materia medica of homeopathic remedies.</span>';
+            $('#content').html(txt);
+        };
 
         $('#content').mousemove(function (event) {
             let d = new Date();
@@ -880,6 +892,13 @@
                 '<span style="color:ORANGE">Intention: </span><span style="color:YELLOW">' + $('#intention').val() + '</span>';
             $('#content').html(progressBar);
         });
+
+        $('#clearButton').click(function (e) {
+            e.preventDefault();
+            clear();
+        });
+
+        clear();
     };
 
     aetherone.getRandomInt = function (seed, min, max) {
