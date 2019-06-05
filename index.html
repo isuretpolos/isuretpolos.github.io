@@ -812,22 +812,18 @@
             });
         }
 
-        console.log("init ...");
-
         $('#content').mousemove(function (event) {
-            var d = new Date();
-            var n = d.getTime();
-            var seed = event.pageX * event.pageY * n;
-            var randomNumber = aetherone.getRandomInt(seed, 1, rates.length);
-            //console.log(event.pageX + ',' + event.pageY + ' [' + n + '] = ' + seed + ' (seed) randomNumber = ' + randomNumber);
-            //console.log(rates[randomNumber]);
+            let d = new Date();
+            let n = d.getTime();
+            let seed = event.pageX * event.pageY * n;
+            let randomNumber = aetherone.getRandomInt(seed, 1, rates.length);
 
             if (aetherone.analysingTempResult == null) {
                 return;
             }
 
             if (aetherone.analysingTempResult.has(rates[randomNumber])) {
-                var value = aetherone.analysingTempResult.get(rates[randomNumber]) + 1;
+                let value = aetherone.analysingTempResult.get(rates[randomNumber]) + 1;
 
                 if (aetherone.highestScore < value) {
                     aetherone.highestScore = value;
@@ -873,7 +869,6 @@
 
         $('#analyzeButton').click(function (e) {
             e.preventDefault();
-            console.log('begin analysis');
             aetherone.analysingTempResult = new Map();
             aetherone.analysisResult = null;
             aetherone.highestScore = 0;
@@ -885,15 +880,13 @@
                 '<span style="color:ORANGE">Intention: </span><span style="color:YELLOW">' + $('#intention').val() + '</span>';
             $('#content').html(progressBar);
         });
-
-        console.log("... init end");
     };
 
     aetherone.getRandomInt = function (seed, min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
-        var myrng = new Math.seedrandom(seed);
-        var randomNumber = myrng.quick();
+        let myrng = new Math.seedrandom(seed);
+        let randomNumber = myrng.quick();
 
         return Math.floor(randomNumber * (max - min)) + min;
     };
@@ -901,11 +894,11 @@
     aetherone.getRandomInt2 = function getRandomInt(seed, min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
-        var number = Math.random();
+        let number = Math.random();
         return Math.floor(number * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
     };
 
-    var mousePos = {};
+    let mousePos = {};
 
     function getRandomInt(min, max) {
         return Math.round(Math.random() * (max - min + 1)) + min;
@@ -921,7 +914,7 @@
         mousePos.y = -1;
     });
 
-    var draw = setInterval(function () {
+    let draw = setInterval(function () {
 
         if (aetherone.analysingTempResult == null) {
             return;
@@ -929,18 +922,18 @@
 
         if (mousePos.x > 0 && mousePos.y > 0) {
 
-            var range = 15;
+            let range = 15;
 
-            var color = "background: rgb(" + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + ");";
+            let color = "background: rgb(" + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + "," + getRandomInt(0, 255) + ");";
 
-            var sizeInt = getRandomInt(10, 30);
+            let sizeInt = getRandomInt(10, 30);
             size = "height: " + sizeInt + "px; width: " + sizeInt + "px;";
 
-            var left = "left: " + getRandomInt(mousePos.x - range - sizeInt, mousePos.x + range) + "px;";
+            let left = "left: " + getRandomInt(mousePos.x - range - sizeInt, mousePos.x + range) + "px;";
 
-            var top = "top: " + getRandomInt(mousePos.y - range - sizeInt, mousePos.y + range) + "px;";
+            let top = "top: " + getRandomInt(mousePos.y - range - sizeInt, mousePos.y + range) + "px;";
 
-            var style = left + top + color + size;
+            let style = left + top + color + size;
             $("<div class='ball' style='" + style + "'></div>").appendTo('#content').one("webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend", function () {
                 $(this).remove();
             });
