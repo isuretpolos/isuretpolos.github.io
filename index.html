@@ -23,14 +23,20 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item">
-                <a class="nav-link" href="https://isuretpolos.wordpress.com/">Blog</a>
+                <a class="nav-link" target="1" href="https://isuretpolos.wordpress.com/">Blog</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="https://github.com/isuretpolos/isuretpolos.github.io">Github</a>
+                <a class="nav-link" target="2" href="https://github.com/isuretpolos/isuretpolos.github.io">Github</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" target="3" href="http://homeoint.org/books/boericmm/index.htm">Materia Medica</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" target="4" href="https://isuretpolos.wordpress.com/literature/">Literature</a>
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0" action="">
-            <input class="form-control mr-sm-2" type="search" placeholder="Intention" aria-label="Search">
+            <input id="intention" class="form-control mr-sm-2" type="search" placeholder="Intention" aria-label="Search">
             <button class="btn btn-outline-success my-2 my-sm-0" id="analyzeButton">Analyze</button>
         </form>
     </div>
@@ -750,7 +756,7 @@
         function extractResult(countDown) {
             aetherone.analysingTempResult.forEach(function (value, rateName) {
                 if (value >= countDown) {
-                    aetherone.analysisResult += '<span class="badge badge-primary">' + value + '</span> <span class="badge badge-success">' + rateName + '</span><br>';
+                    aetherone.analysisResult += '<span class="badge badge-primary">' + value + '</span> <span class="btn badge badge-success materia-medica">' + rateName + '</span><br>';
                     aetherone.analysingTempResult.delete(rateName);
                 }
             });
@@ -796,6 +802,16 @@
                         $('#content').html(aetherone.analysisResult);
                         aetherone.analysingTempResult = null;
                         aetherone.analysisResult = null;
+
+                        $('.materia-medica').click(function (e) {
+                            let txt = $(e.target).text().trim();
+                            txt = txt.substr(1, txt.indexOf(']') - 1);
+                            txt = txt.toLowerCase();
+                            let firstCharacter = txt.substr(0,1);
+                            let url = 'http://homeoint.org/books/boericmm/' + firstCharacter + '/' + txt + '.htm';
+                            window.open(url,'_blank');
+                        });
+
                         return;
                     }
 
@@ -811,9 +827,11 @@
                 aetherone.analysisResult = null;
                 aetherone.highestScore = 0;
 
-                let progressBar = '<div class="progress">\n' +
+                let progressBar = '<span style="color:WHITE">Move your mouse over the black background (stick plate) until it analysis ends.</span>' +
+                    '<div class="progress">\n' +
                     '  <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>\n' +
-                    '</div>';
+                    '</div>' +
+                    '<span style="color:ORANGE">Intention: </span><span style="color:YELLOW">' + $('#intention').val() + '</span>';
                 $('#content').html(progressBar);
             });
 
