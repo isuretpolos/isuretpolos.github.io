@@ -1,5 +1,6 @@
-# isuretpolos.github.io
-My personal [website](https://isuretpolos.github.io) containing diverse experiments in radionics and homeopathy.
+# Isuret Polos Experiments on Radionics and Homeopathy
 
-For my blog visit [isuretpolos.wordpress.com](https://isuretpolos.wordpress.com/).
-And there is a [Open Source Radionics Community](https://vk.com/club184090674) too.
+Links:
+- Blog on [Radionics and Homeopathy](https://isuretpolos.github.io)
+- My personal blog [Isuret Polos](https://isuretpolos.wordpress.com/)
+- The Open Source Radionics [Community](https://vk.com/club184090674) on VK
