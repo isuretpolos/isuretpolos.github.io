@@ -171,3 +171,18 @@ app-live-waveform {
     position: absolute;
     inset: 0;
 }
+
+.anomaly-summary {
+    color: #ff9292;
+}
+.diagnostics input {
+    display: block;
+    width: 120px;
+    min-height: 44px;
+    margin: 6px 0 12px;
+    padding: 8px;
+    background: var(--background-secondary);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}

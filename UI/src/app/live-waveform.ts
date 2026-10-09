@@ -29,6 +29,7 @@ export class LiveWaveform {
         effect(() => {
             this.session.readings();
             this.session.state();
+            this.session.anomalies();
             this.requestDraw();
         });
         destroy.onDestroy(() => {
@@ -132,5 +133,28 @@ export class LiveWaveform {
             lastTime = reading.elapsedMs;
         }
         context.stroke();
+        // Draw red bounds around complete qualifying runs, including the first readings.
+        context.save();
+        context.beginPath();
+        context.rect(left, top, right - left, bottom - top);
+        context.clip();
+        context.strokeStyle = '#FF5252';
+        context.fillStyle = '#FF525214';
+        context.lineWidth = 1;
+        for (const run of this.session.anomalies()) {
+            const first = run.points[0];
+            const last = run.points.at(-1)!;
+            if (last.elapsedMs < now - 60000 || first.elapsedMs > now) {
+                continue;
+            }
+            const x = right - ((now - first.elapsedMs) / 60000) * (right - left);
+            const endX = right - ((now - last.elapsedMs) / 60000) * (right - left);
+            const values = run.points.map((point) => point.gv);
+            const y = middle - ((Math.max(...values) / this.currentScale) * (bottom - top)) / 2 - 8;
+            const endY = middle - ((Math.min(...values) / this.currentScale) * (bottom - top)) / 2 + 8;
+            context.fillRect(x - 5, y, endX - x + 10, endY - y);
+            context.strokeRect(x - 5, y, endX - x + 10, endY - y);
+        }
+        context.restore();
     }
 }

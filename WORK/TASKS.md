@@ -116,3 +116,5 @@ Manual acceptance pending: real-camera snapshot, analysis with real collected ho
 Dedicated session and waveform components; signed GV using shared expansion helper with explicit mode-specific thresholds, transactional hotbit draws; monotonic no-catchup BPM scheduler; pause/resume/stop and bounded 600-entry history; symmetric chart scaling and independent RAF; reusable native/fallback fullscreen; Advanced diagnostics/CSV for retained actual readings; parent busy/update guards; tests and production build before user acceptance.
 
 Live Analysis implemented in version 1.4.0. Validation: 75 tests pass, production build and root PWA assets prepared. Browser checks cover empty storage, responsive controls, and native fullscreen. Real-device camera/PWA validation remains manual. No commit or push.
+
+Live anomaly markings: configurable strict +/-500 threshold and 5 consecutive same-side readings by default. Red bounds follow qualifying runs; changes re-evaluate retained readings without consuming Hotbits.

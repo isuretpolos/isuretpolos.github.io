@@ -1,5 +1,6 @@
-import { DestroyRef, inject, Injectable, NgZone, signal } from '@angular/core';
+import { computed, DestroyRef, inject, Injectable, NgZone, signal } from '@angular/core';
 import { HotbitStore } from './hotbit-store';
+import { findAnomalyRuns } from './live-anomalies';
 
 export const BPM_INTERVALS: Record<number, number> = { 10: 6000, 30: 2000, 60: 1000, 120: 500 };
 export interface LiveReading {
@@ -18,6 +19,11 @@ export class LiveSession {
     readonly state = signal<'stopped' | 'running' | 'paused'>('stopped');
     readonly bpm = signal(60);
     readonly readings = signal<LiveReading[]>([]);
+    readonly anomalyThreshold = signal(500);
+    readonly anomalyMinimum = signal(5);
+    readonly anomalies = computed(() =>
+        findAnomalyRuns(this.readings(), this.anomalyThreshold(), this.anomalyMinimum()),
+    );
     readonly total = signal(0);
     readonly expansions = signal(0);
     readonly limits = signal(0);

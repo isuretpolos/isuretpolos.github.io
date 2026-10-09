@@ -28,6 +28,18 @@ export class LiveAnalysis {
         effect(() => this.busyChange.emit(this.session.state() === 'running' || this.session.pending()));
     }
 
+    setAnomalyThreshold(value: number): void {
+        if (Number.isFinite(value) && value >= 0) {
+            this.session.anomalyThreshold.set(value);
+        }
+    }
+
+    setAnomalyMinimum(value: number): void {
+        if (Number.isInteger(value) && value >= 2 && value <= 600) {
+            this.session.anomalyMinimum.set(value);
+        }
+    }
+
     startPause(): void {
         if (this.session.state() === 'running') {
             this.session.pause();

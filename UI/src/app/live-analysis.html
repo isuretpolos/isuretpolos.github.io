@@ -22,6 +22,10 @@
             <span>Peak {{ signed(session.positivePeak()) }}</span><span>Low {{ signed(session.negativePeak()) }}</span
             ><span>{{ elapsed() }}</span>
         </div>
+        <p class="anomaly-summary">
+            Red marks: {{ session.anomalyMinimum() }} consecutive readings above +{{ session.anomalyThreshold() }} or
+            below −{{ session.anomalyThreshold() }} · {{ session.anomalies().length }} runs in retained history
+        </p>
         <p class="status" role="status">{{ session.status() }} · {{ available() }} Hotbits available</p>
         <div class="controls">
             <button
@@ -46,6 +50,28 @@
         @if (mode() === 'advanced') {
         <details class="diagnostics">
             <summary>Live Diagnostics</summary>
+            <label
+                >High / low threshold
+                <input
+                    type="number"
+                    min="0"
+                    [ngModel]="session.anomalyThreshold()"
+                    (ngModelChange)="setAnomalyThreshold(+$event)"
+            /></label>
+            <label
+                >Consecutive readings
+                <input
+                    type="number"
+                    min="2"
+                    max="600"
+                    step="1"
+                    [ngModel]="session.anomalyMinimum()"
+                    (ngModelChange)="setAnomalyMinimum(+$event)"
+            /></label>
+            <p>
+                Both limits are strict. A reading between the limits or on the opposite side ends a run. Changing these
+                settings re-evaluates retained readings without consuming Hotbits.
+            </p>
             <p>BPM means measurements per minute. {{ session.bpm() }} BPM · {{ 60000 / session.bpm() }} ms interval</p>
             <p>
                 Total measurements: {{ session.total() }} · Expansion draws: {{ session.expansions() }} · Iteration
