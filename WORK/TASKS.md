@@ -97,3 +97,9 @@ Camera, hotbit store, conditioning and analysis algorithms were not changed by t
 Validation: all 39 tests passed; production root build passed. Browser checks at 320/390/1200 CSS-pixel widths; no horizontal overflow at 320. Loaded Bachflower default (39 rates, minimum 450), checked Advanced library opening and return to Simple with loaded list retained. Mobile screenshot: WORK/ui-mobile-preview.png.
 Component-style production budget increased from 4/8 kB to 10/12 kB for the consolidated responsive UI (8.14 kB compiled style). Initial JS/CSS remains about 247 kB, within existing bundle budget.
 Manual acceptance: user review on smartphone and desktop, real-device camera/analysis and PWA offline regression remain pending. No commits or pushes.
+
+## Automatic PWA update detection
+Version bumped once via version.mjs minor to 1.2.0.
+Implemented independent PwaUpdates service using SwUpdate, startup/visibility checks, VERSION_READY banner, user-requested whole-page reload, disabled updates during collection/analysis, pending-write drain with start/analyze guards, and installed version/update status in Advanced Storage Management. No polling, activateUpdate asset mixing, cache clearing or user data deletion.
+Validation: 46 tests across 7 files passed; production root build passed. Regression tests cover startup/foreground/background, ready-event-only notification, no automatic reload, duplicate check suppression, offline failure, disabled service worker, listener cleanup, busy-operation guards and queued writes. Existing IndexedDB transaction/storage tests remain passing. version.json stays app-shell cached so its label reflects the installed build.
+Manual acceptance pending: two actual production deployments on HTTPS/GitHub Pages, foreground update notice, successful explicit reload and storage retention. Development preview has service workers disabled. No commits or pushes.

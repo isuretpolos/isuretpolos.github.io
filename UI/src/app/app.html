@@ -38,6 +38,19 @@
             <circle cx="300" cy="172" r="3" />
         </g>
     </svg>
+    @if (updates.ready()) {
+    <aside class="update-notice" aria-label="Application update">
+        <span role="status">New version available</span>
+        <button
+            class="secondary"
+            (click)="updateNow()"
+            [disabled]="camera.collecting() || analyzing() || updateApplying()"
+        >
+            Update now
+        </button>
+        @if (camera.collecting() || analyzing()) { <small>Finish collection and analysis before updating.</small> }
+    </aside>
+    }
     <div class="mode-switch" role="group" aria-label="Interface mode">
         <button
             [class.selected]="mode() === 'simple'"
@@ -115,7 +128,11 @@
             @if (camera.collecting()) {
             <button class="primary full" (click)="camera.stop()"><app-icon name="camera" />Stop &amp; Save</button>
             } @else {
-            <button class="primary full" (click)="startCollection()" [disabled]="analyzing() || !hotbitReady()">
+            <button
+                class="primary full"
+                (click)="startCollection()"
+                [disabled]="updateApplying() || analyzing() || !hotbitReady()"
+            >
                 <app-icon name="camera" />Start Collection
             </button>
             }
@@ -145,7 +162,7 @@
             <button
                 class="analysis-button full"
                 (click)="runAnalysis()"
-                [disabled]="analyzing() || !rates().length || !hotbitReady() || available() < required()"
+                [disabled]="updateApplying() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
             >
                 <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
@@ -321,6 +338,16 @@
         <details>
             <summary>Storage Management</summary>
             <div class="panel-content">
+                @if (appVersion(); as version) {
+                <p>Installed application version: {{ version.version }} · {{ version.description }}</p>
+                }
+                <p>
+                    {{ updates.enabled ? 'Automatic PWA update checks enabled' : 'PWA updates unavailable in this
+                    browser or development build' }}
+                </p>
+                @if (updates.checkError()) {
+                <p>{{ updates.checkError() }}</p>
+                }
                 <p>{{ storageStatus() }}</p>
                 <button class="secondary" (click)="requestPersistence()">Request persistent storage</button>
                 <p>

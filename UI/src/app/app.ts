@@ -7,6 +7,7 @@ import { HotbitStore } from './hotbit-store';
 import { CameraHotbits } from './camera-hotbits';
 import { AnalysisResult } from './analysis';
 import { Icon } from './icon';
+import { PwaUpdates } from './pwa-updates';
 
 @Component({
     selector: 'app-root',
@@ -17,6 +18,8 @@ import { Icon } from './icon';
 export class App {
     private readonly http = inject(HttpClient);
     private readonly store = inject(RateListStore);
+    readonly updates = inject(PwaUpdates);
+    readonly updateApplying = signal(false);
     readonly appVersion = signal<{ version: string; description: string } | undefined>(undefined);
     readonly defaults = signal<string[]>([]);
     readonly saved = signal<SavedList[]>([]);
@@ -286,6 +289,9 @@ export class App {
     }
 
     startCollection(): void {
+        if (this.updateApplying()) {
+            return;
+        }
         this.error.set('');
         this.camera
             .start((words) => {
@@ -301,7 +307,7 @@ export class App {
     }
 
     runAnalysis(): void {
-        if (this.analyzing() || !this.rates().length) {
+        if (this.updateApplying() || this.analyzing() || !this.rates().length) {
             return;
         }
         const rates = this.rates().map((rate) => ({ ...rate }));
@@ -327,6 +333,22 @@ export class App {
                 this.analyzing.set(false);
                 this.refreshHotbits();
             });
+    }
+
+    updateNow(): void {
+        if (!this.updates.ready() || this.camera.collecting() || this.analyzing() || this.updateApplying()) {
+            return;
+        }
+        this.updateApplying.set(true);
+        // A stopped camera can still have a final IndexedDB batch queued for persistence.
+        this.writes
+            .then(() => {
+                if (!this.camera.collecting() && !this.analyzing()) {
+                    this.updates.reload();
+                }
+            })
+            .catch((error) => this.fail(error))
+            .finally(() => this.updateApplying.set(false));
     }
 
     requestPersistence(): void {

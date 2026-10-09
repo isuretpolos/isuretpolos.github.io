@@ -153,6 +153,68 @@ describe('Rate workspace', () => {
         http.verify();
     });
 
+    it('only allows user-requested reloads while idle', () => {
+        const fixture = TestBed.createComponent(App);
+        const app = fixture.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/version.json').flush({ version: '1.2.0', description: 'Updates' });
+        http.expectOne('/RATES/index.json').flush([]);
+        const reload = vi.spyOn(app.updates, 'reload').mockImplementation(() => {});
+        app.updates.ready.set(true);
+        app.camera.collecting.set(true);
+        fixture.detectChanges();
+        const button = (fixture.nativeElement as HTMLElement).querySelector<HTMLButtonElement>(
+            '.update-notice button',
+        )!;
+        expect(button.disabled).toBe(true);
+        app.updateNow();
+        expect(reload).not.toHaveBeenCalled();
+        app.camera.collecting.set(false);
+        app.analyzing.set(true);
+        app.updateNow();
+        expect(reload).not.toHaveBeenCalled();
+        app.analyzing.set(false);
+        fixture.detectChanges();
+        expect(button.disabled).toBe(false);
+        app.updateNow();
+        return vi.waitFor(() => expect(reload).toHaveBeenCalledOnce()).then(() => reload.mockRestore());
+    });
+
+    it('waits for the final collection write before reloading', () => {
+        const app = TestBed.createComponent(App).componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/version.json').flush({ version: '1.2.0', description: 'Updates' });
+        http.expectOne('/RATES/index.json').flush([]);
+        const store = TestBed.inject(HotbitStore);
+        let finishWrite!: () => void;
+        const append = vi
+            .spyOn(store, 'append')
+            .mockImplementation(() => new Promise<void>((resolve) => (finishWrite = resolve)));
+        const start = vi.spyOn(app.camera, 'start').mockImplementation((sink) => {
+            sink(new Uint32Array([123]));
+            return Promise.resolve();
+        });
+        const reload = vi.spyOn(app.updates, 'reload').mockImplementation(() => {});
+        app.startCollection();
+        app.updates.ready.set(true);
+        app.updateNow();
+        expect(app.updateApplying()).toBe(true);
+        return vi
+            .waitFor(() => expect(append).toHaveBeenCalledOnce())
+            .then(() => {
+                expect(reload).not.toHaveBeenCalled();
+                app.startCollection();
+                expect(start).toHaveBeenCalledOnce();
+                finishWrite();
+                return vi.waitFor(() => expect(reload).toHaveBeenCalledOnce());
+            })
+            .finally(() => {
+                append.mockRestore();
+                start.mockRestore();
+                reload.mockRestore();
+            });
+    });
+
     it('loads the manifest and keeps predefined lists read-only', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;

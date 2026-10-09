@@ -106,3 +106,24 @@ persistence requests, complete numerical results and technical notes in
 collapsible panels. Mode preference is local; switching does not reset data.
 Result bars scale GV relative to the largest GV in the current result set.
 The first three results display initially; expand to see all selected rates.
+
+## Automatic PWA updates (1.2.0)
+
+The production PWA checks through Angular SwUpdate at startup and whenever the
+page becomes visible again. VERSION_READY shows "New version available" and
+"Update now". Update checks are deduplicated; offline failures are nonfatal and
+retried on foreground. The notification never triggers an automatic reload.
+The button is disabled during camera collection or analysis. Explicit reloads
+wait for queued hotbit writes and block new collection/analysis during that wait.
+Advanced → Storage Management shows the installed version from the app-shell
+cached version.json, plus update-check status. No caches, service workers,
+IndexedDB databases or localStorage entries are cleared for updates.
+
+Serve the production root over GitHub Pages HTTPS or localhost. Angular's
+ngsw.json detects a newly deployed build; deploy the complete matching compiled
+assets and manifest together. Development `npm start` disables the service
+worker. For manual acceptance, install/open build A, deploy build B, return to
+the foreground and check the banner. Verify updating is blocked while collecting
+or analyzing; stop/finish, click Update now, and confirm the installed version
+and saved rate lists/hotbit count after reload. Existing site origin and storage
+schema are unchanged.
