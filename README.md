@@ -97,3 +97,12 @@ versioning instructions in `AGENTS.md`. No command commits or pushes.
 Website/PWA icons are in `UI/public/icons`; the master is `radionics-source.png`.
 Dedicated maskable variants include safe padding. The favicon includes 16, 32,
 48 and 256 pixel images; Apple touch uses 180 pixels.
+
+## Interface modes (1.1.0)
+
+Simple mode guides list selection, hotbit collection, analysis and results.
+Advanced mode retains diagnostics, local library/editor, import/export,
+persistence requests, complete numerical results and technical notes in
+collapsible panels. Mode preference is local; switching does not reset data.
+Result bars scale GV relative to the largest GV in the current result set.
+The first three results display initially; expand to see all selected rates.

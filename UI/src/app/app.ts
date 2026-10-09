@@ -6,10 +6,11 @@ import { RateListStore } from './rate-list-store';
 import { HotbitStore } from './hotbit-store';
 import { CameraHotbits } from './camera-hotbits';
 import { AnalysisResult } from './analysis';
+import { Icon } from './icon';
 
 @Component({
     selector: 'app-root',
-    imports: [FormsModule],
+    imports: [FormsModule, Icon],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
@@ -34,6 +35,77 @@ export class App {
     readonly hotbitReady = signal(false);
     private writes: Promise<void> = Promise.resolve();
     readonly required = (): number => this.rates().length * 10 + Math.min(20, this.rates().length) * 3;
+    readonly mode = signal<'simple' | 'advanced'>('simple');
+    readonly expandedResults = signal(false);
+    readonly storageStatus = signal('Browser-managed local storage');
+    listChoice = '';
+    readonly stepLabels = ['Select List', 'Collect', 'Analyze', 'Results'];
+
+    currentStep(): number {
+        if (this.analyzing()) {
+            return 3;
+        }
+        if (this.results().length) {
+            return 4;
+        }
+        if (!this.rates().length) {
+            return 1;
+        }
+        return this.hotbitReady() && this.available() >= this.required() ? 3 : 2;
+    }
+
+    progressPercent(): number {
+        return this.required() ? Math.min(100, Math.floor((this.available() / this.required()) * 100)) : 0;
+    }
+
+    resultWidth(gv: number): number {
+        const maximum = Math.max(1, ...this.results().map((result) => result.gv));
+        return (gv / maximum) * 100;
+    }
+
+    cameraLabel(): string {
+        if (this.camera.collecting()) {
+            return 'Collecting';
+        }
+        const status = this.camera.status();
+        if (status.includes('denied') || status.includes('unavailable') || status.includes('could not')) {
+            return 'Camera unavailable';
+        }
+        return this.camera.rawSamples() ? 'Paused' : 'Ready';
+    }
+
+    setMode(mode: 'simple' | 'advanced'): void {
+        this.mode.set(mode);
+        try {
+            localStorage.setItem('radionics.ui-mode', mode);
+        } catch {
+            // Mode remains usable when browser preference storage is unavailable.
+        }
+    }
+
+    manageLists(): void {
+        this.setMode('advanced');
+        setTimeout(() => {
+            const panel = document.querySelector<HTMLDetailsElement>('#rate-library');
+            if (panel) {
+                panel.open = true;
+                panel.scrollIntoView?.({ block: 'start' });
+            }
+        });
+    }
+
+    useChosenList(): void {
+        if (this.listChoice.startsWith('default:')) {
+            this.selectedDefault = this.listChoice.slice(8);
+            this.loadDefault();
+        } else if (this.listChoice.startsWith('local:')) {
+            const list = this.saved().find((entry) => entry.id === this.listChoice.slice(6));
+            if (list) {
+                this.open(list.name, list.content, list.id);
+            }
+        }
+    }
+
     name = '';
     content = '';
     selectedDefault = '';
@@ -41,6 +113,13 @@ export class App {
     readOnly = false;
 
     constructor() {
+        try {
+            if (localStorage.getItem('radionics.ui-mode') === 'advanced') {
+                this.mode.set('advanced');
+            }
+        } catch {
+            // Default to Simple when browser preference storage is unavailable.
+        }
         this.http.get<{ version: string; description: string }>('/version.json').subscribe({
             next: (version) => this.appVersion.set(version),
             error: () => {},
@@ -121,6 +200,7 @@ export class App {
             this.fail(new Error('The list contains no rates.'));
             return;
         }
+        this.listChoice = id ? `local:${id}` : readOnly ? `default:${this.selectedDefault}` : '';
         this.name = name;
         this.content = content;
         this.editingId = id;
@@ -130,6 +210,7 @@ export class App {
 
     newList(): void {
         this.results.set([]);
+        this.listChoice = '';
         this.name = '';
         this.content = '';
         this.editingId = undefined;
@@ -149,7 +230,7 @@ export class App {
     preview(): void {
         this.results.set([]);
         this.rates.set(parseRates(this.content));
-        this.message.set(`${this.rates().length} rates loaded. Duplicate names retain their original order.`);
+        this.message.set(`List ready · ${this.rates().length} rates`);
         this.error.set('');
     }
 
@@ -233,7 +314,13 @@ export class App {
             .then((results) => {
                 this.results.set(results);
                 this.resultListName.set(listName);
-                this.message.set('Analysis complete. All random draws consumed fresh stored hotbits.');
+                this.expandedResults.set(false);
+                this.message.set('Analysis complete.');
+                setTimeout(() => {
+                    const section = document.getElementById('results-card');
+                    section?.scrollIntoView?.({ block: 'nearest' });
+                    section?.focus({ preventScroll: true });
+                });
             })
             .catch((error) => this.fail(error))
             .finally(() => {
@@ -249,13 +336,14 @@ export class App {
         }
         navigator.storage
             .persist()
-            .then((granted) =>
+            .then((granted) => {
+                this.storageStatus.set(granted ? 'Persistent storage granted' : 'Persistence not granted');
                 this.message.set(
                     granted
                         ? 'Persistent browser storage granted. Clearing site data still erases local data.'
                         : 'Persistent storage was not granted. Browser data may be evicted.',
-                ),
-            )
+                );
+            })
             .catch((error) => this.fail(error));
     }
 

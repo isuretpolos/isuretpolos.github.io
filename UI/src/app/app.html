@@ -1,152 +1,405 @@
 <main>
-    <header>
-        <p class="eyebrow">ISURET POLOS · LOCAL RESEARCH</p>
-        <h1>Radionics workspace</h1>
-        <p>Load a list, collect webcam hotbits, then analyze. Your data stays in this browser.</p>
+    <header class="app-header">
+        <div>
+            <h1>Radionics Workspace</h1>
+            <p class="eyebrow">ISURET POLOS · LOCAL RESEARCH</p>
+        </div>
+        <button class="icon-button secondary" (click)="setMode('advanced')" aria-label="Open advanced settings">
+            <app-icon name="settings" />
+        </button>
     </header>
-    <aside class="notice">
-        Research tool · Random scores do not establish physical energy or clinical properties. Webcam-derived
-        experimental randomness · entropy is not verified.
-    </aside>
+    <svg class="instrument" viewBox="0 0 600 220" aria-hidden="true">
+        <defs>
+            <radialGradient id="core">
+                <stop stop-color="#F5F7FF" />
+                <stop offset=".3" stop-color="#42E6EC" />
+                <stop offset="1" stop-color="#42E6EC" stop-opacity="0" />
+            </radialGradient>
+        </defs>
+        <g fill="none" stroke-width="1">
+            <ellipse cx="300" cy="188" rx="240" ry="24" stroke="#914DE8" opacity=".3" />
+            <ellipse cx="300" cy="184" rx="190" ry="20" stroke="#914DE8" opacity=".5" />
+            <ellipse cx="300" cy="180" rx="135" ry="15" stroke="#42E6EC" opacity=".5" />
+            <circle cx="300" cy="100" r="93" stroke="#42E6EC" opacity=".2" />
+            <circle cx="300" cy="100" r="82" stroke="#42E6EC" opacity=".5" />
+            <circle cx="300" cy="100" r="72" stroke="#42E6EC" stroke-width="2" />
+            <g stroke="#D1BDFF">
+                <ellipse cx="300" cy="100" rx="58" ry="23" />
+                <ellipse cx="300" cy="100" rx="58" ry="23" transform="rotate(60 300 100)" />
+                <ellipse cx="300" cy="100" rx="58" ry="23" transform="rotate(120 300 100)" />
+            </g>
+        </g>
+        <circle cx="300" cy="100" r="30" fill="url(#core)" />
+        <circle cx="300" cy="100" r="5" fill="#F5F7FF" />
+        <g fill="#42E6EC">
+            <circle cx="300" cy="28" r="3" />
+            <circle cx="228" cy="100" r="3" />
+            <circle cx="372" cy="100" r="3" />
+            <circle cx="300" cy="172" r="3" />
+        </g>
+    </svg>
+    <div class="mode-switch" role="group" aria-label="Interface mode">
+        <button
+            [class.selected]="mode() === 'simple'"
+            [attr.aria-pressed]="mode() === 'simple'"
+            (click)="setMode('simple')"
+        >
+            Simple
+        </button>
+        <button
+            [class.selected]="mode() === 'advanced'"
+            [attr.aria-pressed]="mode() === 'advanced'"
+            (click)="setMode('advanced')"
+        >
+            Advanced
+        </button>
+    </div>
+    <nav class="steps" aria-label="Analysis workflow">
+        @for (label of stepLabels; track $index) {
+        <a
+            [href]="'#' + ['list-card', 'collect-card', 'analyze-card', 'results-card'][$index]"
+            [class.active]="currentStep() === $index + 1"
+            [class.complete]="currentStep() > $index + 1"
+            [class.future]="currentStep() < $index + 1"
+            [attr.aria-current]="currentStep() === $index + 1 ? 'step' : null"
+        >
+            <span>{{ $index + 1 }}</span>{{ label }}
+        </a>
+        }
+    </nav>
     @if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
     }
-    <p role="status">{{ message() }}</p>
-    <section class="analysis-panel" aria-labelledby="analysis-title">
-        <h2 id="analysis-title">Analyze your loaded list</h2>
-        <p>
-            1. Start collection and allow camera access. 2. Watch the progress below. 3. Analyze as soon as the minimum
-            is reached.
-        </p>
-        <p>
-            No camera images or raw random values are displayed or uploaded. Collection stops when this page is hidden.
-        </p>
-        <div class="actions">
-            <button (click)="startCollection()" [disabled]="camera.collecting() || analyzing() || !hotbitReady()">
-                Start camera collection
+    <p class="status-message" role="status">{{ message() }}</p>
+    <div class="workflow-grid">
+        <section class="card" id="list-card" aria-labelledby="list-heading">
+            <div class="card-heading">
+                <span class="badge"><app-icon name="list" /></span>
+                <div>
+                    <h2 id="list-heading">1. Select List</h2>
+                    <p>Choose a list of rates.</p>
+                </div>
+                <span class="count">{{ rates().length }}<small>rates loaded</small></span>
+            </div>
+            <label class="sr-only" for="simple-list">Rate list</label>
+            <select id="simple-list" [(ngModel)]="listChoice">
+                <option value="">{{ rates().length ? name + ' · loaded' : 'Choose a list' }}</option>
+                <optgroup label="Predefined lists">
+                    @for (file of defaults(); track file) {
+                    <option [value]="'default:' + file">{{ file.replace('.txt', '') }}</option>
+                    }
+                </optgroup>
+                <optgroup label="Your local lists">
+                    @for (list of saved(); track list.id) {
+                    <option [value]="'local:' + list.id">{{ list.name }}</option>
+                    }
+                </optgroup>
+            </select>
+            <button class="primary full" (click)="useChosenList()" [disabled]="!listChoice || loading()">
+                {{ loading() ? 'Loading…' : 'Use This List' }} <app-icon name="arrow" />
             </button>
-            <button class="secondary" (click)="camera.stop()">Stop &amp; save collection</button>
+            <div class="card-foot">
+                <span class="ready">{{ rates().length ? 'List ready · ' + name : 'Select a list to begin' }}</span
+                ><button class="text-button" (click)="manageLists()">Manage Lists</button>
+            </div>
+        </section>
+        <section class="card" id="collect-card" aria-labelledby="collect-heading">
+            <div class="card-heading">
+                <span class="badge"><app-icon name="camera" /></span>
+                <div>
+                    <h2 id="collect-heading">2. Collect Hotbits</h2>
+                    <p>Use your camera to collect random data.</p>
+                </div>
+                <span class="camera-state" [class.live]="camera.collecting()"><i></i>{{ cameraLabel() }}</span>
+            </div>
+            @if (camera.collecting()) {
+            <button class="primary full" (click)="camera.stop()"><app-icon name="camera" />Stop &amp; Save</button>
+            } @else {
+            <button class="primary full" (click)="startCollection()" [disabled]="analyzing() || !hotbitReady()">
+                <app-icon name="camera" />Start Collection
+            </button>
+            }
+            <div class="progress-row">
+                <label for="hotbit-progress">{{ available() }} / {{ required() }}</label>
+                <progress
+                    id="hotbit-progress"
+                    [value]="available()"
+                    [max]="required() || 1"
+                    aria-label="Stored hotbits toward analysis minimum"
+                ></progress
+                ><span>{{ progressPercent() }}%</span>
+            </div>
+            <p class="ready">
+                {{ !rates().length ? 'Load a list to set your target' : available() >= required() ? 'Enough Hotbits
+                available' : 'Collecting toward the analysis minimum' }}
+            </p>
+        </section>
+        <section class="card" id="analyze-card" aria-labelledby="analyze-heading" [attr.aria-busy]="analyzing()">
+            <div class="card-heading">
+                <span class="badge"><app-icon name="wave" /></span>
+                <div>
+                    <h2 id="analyze-heading">3. Analyze</h2>
+                    <p>Analyze the loaded rate list.</p>
+                </div>
+            </div>
             <button
+                class="analysis-button full"
                 (click)="runAnalysis()"
                 [disabled]="analyzing() || !rates().length || !hotbitReady() || available() < required()"
             >
-                {{ analyzing() ? 'Analyzing…' : 'Analyze loaded list' }}
+                <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
-            <button class="secondary" (click)="requestPersistence()">Request persistent storage</button>
-        </div>
-        <label for="hotbit-progress">Hotbits for analysis: {{ available() }} / {{ required() }} integers</label>
-        <progress id="hotbit-progress" [value]="available()" [max]="required() || 1"></progress>
-        <p role="status">{{ camera.status() }} · Available: {{ available() }} integers · Consumed: {{ consumed() }}</p>
-        <p>
-            Minimum for this list: {{ required() }} integers. Rejection sampling and GV bonuses may need additional
-            hotbits. Validated sample windows save automatically during collection.
-        </p>
-        <p class="hint">
-            {{ camera.health() }} · Candidate samples: {{ camera.rawSamples() }} · Conditioned bits: {{
-            camera.usableBits() }} · Equal samples discarded: {{ camera.rejectedSamples() }}
-        </p>
-        <p class="hint">
-            Von Neumann pair conditioning reduces bias only when its independence assumptions hold. Motion, exposure
-            changes and camera artifacts can produce correlations. These basic checks do not prove unpredictability.
-        </p>
-        @if (results().length) {
-        <h3>Analysis results · {{ resultListName() }}</h3>
-        <div class="result-scroll">
-            <table>
-                <thead>
-                    <tr>
-                        <th scope="col">Rate</th>
-                        <th scope="col">Energetic score</th>
-                        <th scope="col">GV</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (result of results(); track result.originalIndex) {
-                    <tr>
-                        <td>
-                            @if (result.url) {
-                            <a [href]="result.url" target="_blank" rel="noopener noreferrer">{{ result.name }}</a> }
-                            @else { {{ result.name }} }
-                        </td>
-                        <td>{{ result.energeticScore }}</td>
-                        <td>{{ result.gv }}</td>
-                    </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        <p class="hint">
-            Score: sum of ten 0–10 draws. GV: maximum of three 0–1000 draws. Above 950, add a 0–100 draw; repeat while
-            the added draw exceeds 95. Results are ordered by GV, score, then original list order.
-        </p>
-        }
-    </section>
-    <div class="workspace">
-        <section aria-labelledby="library-title">
-            <h2 id="library-title">Rate library</h2>
-            <label for="default-list">Predefined list</label>
-            <select id="default-list" [(ngModel)]="selectedDefault">
-                <option value="">Choose a list</option>
-                @for (file of defaults(); track file) {
-                <option [value]="file">{{ file.replace('.txt', '') }}</option>
-                }
-            </select>
-            <button (click)="loadDefault()" [disabled]="!selectedDefault || loading()">
-                {{ loading() ? 'Loading…' : 'Load default' }}
-            </button>
-            <h3>Your local lists</h3>
-            @for (list of saved(); track list.id) {
-            <div class="saved-list">
-                <button class="secondary" (click)="open(list.name, list.content, list.id)">{{ list.name }}</button>
-                <button class="secondary" (click)="remove(list)" [attr.aria-label]="'Delete ' + list.name">
-                    Delete
-                </button>
-            </div>
-            } @empty {
-            <p>No saved lists yet.</p>
+            @if (analyzing()) {
+            <p class="processing" role="status">Processing your list…</p>
             }
-            <button class="secondary" (click)="newList()">New pasted list</button>
-            <label for="import-file">Import UTF-8 text file</label>
-            <input id="import-file" type="file" accept=".txt,text/plain" (change)="importFile($event)" />
-            <p class="hint">Clearing site data or uninstalling may erase local lists. Export backups to keep them.</p>
+            <p class="hint">Collection continues during analysis. Additional draws may require more Hotbits.</p>
         </section>
-        <section aria-labelledby="editor-title">
-            <h2 id="editor-title">{{ readOnly ? 'Default list (read-only)' : 'List editor' }}</h2>
-            <label for="list-name">List name</label>
-            <input id="list-name" [(ngModel)]="name" [readOnly]="readOnly" />
-            <label for="list-content">Rates · one per line, optional URL after a tab</label>
-            <textarea
-                id="list-content"
-                [(ngModel)]="content"
-                [readOnly]="readOnly"
-                (ngModelChange)="preview()"
-                rows="12"
-            ></textarea>
-            <div class="actions">
-                @if (readOnly) {
-                <button (click)="makeCopy()">Create editable copy</button>
-                } @else {
-                <button (click)="save()" [disabled]="!storageReady() || !name.trim() || !rates().length">
-                    {{ editingId ? 'Save changes / rename' : 'Save locally' }}
-                </button>
-                }
-                <button class="secondary" (click)="exportList()" [disabled]="!rates().length">Export .txt</button>
+        <section class="card results-card" id="results-card" tabindex="-1" aria-labelledby="results-heading">
+            <div class="card-heading">
+                <span class="badge"><app-icon name="bars" /></span>
+                <div>
+                    <h2 id="results-heading">4. Results</h2>
+                    <p>{{ results().length ? resultListName() : 'Your analysis results will appear here.' }}</p>
+                </div>
             </div>
-            <h3>Preview · {{ rates().length }} rates</h3>
-            <ol class="preview">
-                @for (rate of rates(); track rate.originalIndex) {
+            @if (results().length) {
+            <ol class="results-list">
+                @for (result of (expandedResults() ? results() : results().slice(0, 3)); track result.originalIndex) {
                 <li>
-                    @if (rate.url) {
-                    <a [href]="rate.url" target="_blank" rel="noopener noreferrer">{{ rate.name }}</a>
-                    } @else { {{ rate.name }} }
+                    <span class="rank">{{ $index + 1 }}</span
+                    ><span class="rate-name"
+                        >@if (result.url) {
+                        <a [href]="result.url" target="_blank" rel="noopener noreferrer">{{ result.name }}</a> } @else {
+                        {{ result.name }} }</span
+                    >
+                    <span class="bar-track" aria-hidden="true"
+                        ><span [style.width.%]="resultWidth(result.gv)"></span></span
+                    ><strong>GV {{ result.gv }}</strong>
                 </li>
                 }
             </ol>
+            <p class="hint">
+                Bars compare GV within this result set; they do not show physical energy or clinical effectiveness.
+            </p>
+            @if (results().length > 3) {
+            <button class="secondary full" (click)="expandedResults.set(!expandedResults())">
+                {{ expandedResults() ? 'Show top 3' : 'Show all ' + results().length + ' results' }}
+            </button>
+            } } @else {
+            <p class="empty-state">Select → Collect → Analyze</p>
+            }
         </section>
     </div>
+    @if (mode() === 'simple') {
+    <button class="advanced-entry secondary full" (click)="setMode('advanced')">
+        <app-icon name="settings" /><span
+            ><strong>Advanced Mode</strong><small>Diagnostics, list editor, import/export and more</small></span
+        ><app-icon name="arrow" />
+    </button>
+    } @else {
+    <div class="advanced-panels">
+        <details>
+            <summary>Hotbits Diagnostics</summary>
+            <div class="panel-content">
+                <p>{{ camera.status() }}</p>
+                <dl>
+                    <div>
+                        <dt>Available integers</dt>
+                        <dd>{{ available() }}</dd>
+                    </div>
+                    <div>
+                        <dt>Consumed integers</dt>
+                        <dd>{{ consumed() }}</dd>
+                    </div>
+                    <div>
+                        <dt>Candidate samples</dt>
+                        <dd>{{ camera.rawSamples() }}</dd>
+                    </div>
+                    <div>
+                        <dt>Conditioned bits</dt>
+                        <dd>{{ camera.usableBits() }}</dd>
+                    </div>
+                    <div>
+                        <dt>Equal samples discarded</dt>
+                        <dd>{{ camera.rejectedSamples() }}</dd>
+                    </div>
+                    <div>
+                        <dt>Minimum integers</dt>
+                        <dd>{{ required() }}</dd>
+                    </div>
+                </dl>
+                <p>{{ camera.health() }}</p>
+                <p>
+                    Rejection sampling and GV bonuses may require additional hotbits. Validated windows save
+                    automatically. Collection stops when this page is hidden.
+                </p>
+            </div>
+        </details>
+        <div class="workspace">
+            <details id="rate-library">
+                <summary>Rate Library</summary>
+                <div class="panel-content">
+                    <h2 id="library-title">Rate library</h2>
+                    <label for="default-list">Predefined list</label>
+                    <select id="default-list" [(ngModel)]="selectedDefault">
+                        <option value="">Choose a list</option>
+                        @for (file of defaults(); track file) {
+                        <option [value]="file">{{ file.replace('.txt', '') }}</option>
+                        }
+                    </select>
+                    <button (click)="loadDefault()" [disabled]="!selectedDefault || loading()">
+                        {{ loading() ? 'Loading…' : 'Load default' }}
+                    </button>
+                    <h3>Your local lists</h3>
+                    @for (list of saved(); track list.id) {
+                    <div class="saved-list">
+                        <button class="secondary" (click)="open(list.name, list.content, list.id)">
+                            {{ list.name }}
+                        </button>
+                        <button
+                            class="secondary"
+                            (click)="open(list.name, list.content, list.id); makeCopy()"
+                            [attr.aria-label]="'Copy ' + list.name"
+                        >
+                            Copy
+                        </button>
+                        <button class="secondary" (click)="remove(list)" [attr.aria-label]="'Delete ' + list.name">
+                            Delete
+                        </button>
+                    </div>
+                    } @empty {
+                    <p>No saved lists yet.</p>
+                    }
+                    <button class="secondary" (click)="newList()">New pasted list</button>
+                    <label for="import-file">Import UTF-8 text file</label>
+                    <input id="import-file" type="file" accept=".txt,text/plain" (change)="importFile($event)" />
+                    <p class="hint">
+                        Clearing site data or uninstalling may erase local lists. Export backups to keep them.
+                    </p>
+                </div>
+            </details>
+            <details id="rate-editor">
+                <summary>Rate List Editor</summary>
+                <div class="panel-content">
+                    <h2 id="editor-title">{{ readOnly ? 'Default list (read-only)' : 'List editor' }}</h2>
+                    <label for="list-name">List name</label>
+                    <input id="list-name" [(ngModel)]="name" [readOnly]="readOnly" />
+                    <label for="list-content">Rates · one per line, optional URL after a tab</label>
+                    <textarea
+                        id="list-content"
+                        [(ngModel)]="content"
+                        [readOnly]="readOnly"
+                        (ngModelChange)="preview()"
+                        rows="12"
+                    ></textarea>
+                    <div class="actions">
+                        @if (readOnly) {
+                        <button (click)="makeCopy()">Create editable copy</button>
+                        } @else {
+                        <button (click)="save()" [disabled]="!storageReady() || !name.trim() || !rates().length">
+                            {{ editingId ? 'Save changes / rename' : 'Save locally' }}
+                        </button>
+                        }
+                        <button class="secondary" (click)="exportList()" [disabled]="!rates().length">
+                            Export .txt
+                        </button>
+                    </div>
+                    <h3>Preview · {{ rates().length }} rates</h3>
+                    <ol class="preview">
+                        @for (rate of rates(); track rate.originalIndex) {
+                        <li>
+                            @if (rate.url) {
+                            <a [href]="rate.url" target="_blank" rel="noopener noreferrer">{{ rate.name }}</a>
+                            } @else { {{ rate.name }} }
+                        </li>
+                        }
+                    </ol>
+                </div>
+            </details>
+        </div>
+
+        <details>
+            <summary>Storage Management</summary>
+            <div class="panel-content">
+                <p>{{ storageStatus() }}</p>
+                <button class="secondary" (click)="requestPersistence()">Request persistent storage</button>
+                <p>
+                    Hotbits are stored in IndexedDB; custom lists in localStorage. Clearing site data or uninstalling
+                    may erase local data. Export backups. Persistent storage may be denied and does not protect against
+                    manual deletion.
+                </p>
+            </div>
+        </details>
+        <details>
+            <summary>Complete Numerical Analysis</summary>
+            <div class="panel-content result-scroll">
+                @if (results().length) {
+                <table>
+                    <caption>
+                        {{ resultListName() }}
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Rate</th>
+                            <th scope="col">Energetic score</th>
+                            <th scope="col">GV</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (result of results(); track result.originalIndex) {
+                        <tr>
+                            <td>{{ result.name }}</td>
+                            <td>{{ result.energeticScore }}</td>
+                            <td>{{ result.gv }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+                } @else {
+                <p>No analysis results yet.</p>
+                }
+            </div>
+        </details>
+        <details>
+            <summary>Technical Information</summary>
+            <div class="panel-content">
+                <p>
+                    Research tool: random scores do not establish physical energy or clinical properties. Webcam-derived
+                    randomness is experimental; entropy is not verified.
+                </p>
+                <p>
+                    Startup discards 15 frames and waits for frame differences. Sparse pixel intensity comparisons
+                    produce candidate bits. Directional scene/exposure changes are skipped; rejected sample windows do
+                    not erase stored hotbits.
+                </p>
+                <p>
+                    Von Neumann pairs (01 → 0, 10 → 1; equal pairs discarded) reduce bias only under independence
+                    assumptions. Motion, exposure changes and camera artifacts can produce correlations. Basic bias and
+                    repetition checks do not prove unpredictability.
+                </p>
+                <p>
+                    Each rate receives ten inclusive 0–10 draws, summed as its energetic score. The top 20 receive three
+                    inclusive 0–1000 draws; GV is their maximum, favoring higher values. If base GV exceeds 950, add
+                    0–100 draws and repeat while the latest added draw exceeds 95. Final order: GV, energetic score,
+                    original list order.
+                </p>
+                <p>
+                    Duplicate names remain independent rows in original order. Every draw consumes fresh conditioned
+                    hotbits using rejection sampling. Failed attempts retire consumed material and return no partial
+                    results. There is no PRNG fallback. Raw bits and integers are never displayed.
+                </p>
+                <p>
+                    Camera access requires HTTPS or localhost. If access is denied, enable camera permission in browser
+                    settings and press Start Collection again. All camera processing and imported data remain local; no
+                    images or files are uploaded.
+                </p>
+            </div>
+        </details>
+    </div>
+    }
     <footer>
-        All processing is local. Default lists download from this website; imported content is never uploaded. Hotbits
-        remain local and raw values are never displayed. @if (appVersion(); as version) {
+        <p>Local research · Experimental randomness</p>
+        @if (appVersion(); as version) {
         <p>Version {{ version.version }} · {{ version.description }}</p>
         }
     </footer>

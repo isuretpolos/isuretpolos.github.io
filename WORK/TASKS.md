@@ -80,3 +80,20 @@ Validation: 37 tests passed; production/root build passed. Tests reproduce the e
 Implemented the supplied image as an adapted atom/meditation icon via built-in Imagegen; source at UI/public/icons/radionics-source.png. Prompt: front-facing cyan atom and dark meditation silhouette with violet waves on navy, no box/perspective/text, small-size readability. Generated standard PNG sizes, padded maskable variants, Apple touch icon and multiresolution favicon. No CLI image-generation fallback used.
 Added root version.json initialized to 1.0.0 / First version; version.mjs supports major/minor/patch/bugfix and validates input. Build syncs metadata without automatically incrementing. Footer loads version.json; PWA caches metadata with the app shell. Persistent future version-bump instructions are recorded in AGENTS.md.
 Validation: semantic version script test passed; Angular suite and production build passed. Browser favicon/PWA installation appearance remains a manual check. No commits or pushes.
+
+## UI redesign plan
+Scope: presentation and workflow only; preserve camera, storage, rejection sampling, scoring/GV services.
+1. Theme and compact SVG instrument header; persistent Simple/Advanced mode.
+2. Four state-driven workflow cards, combined default/local selection, live collection progress.
+3. Actual-GV result bars with top-three/full list; advanced numerical table.
+4. Collapsible diagnostics, library/editor, storage and technical panels.
+5. Regression checks for mode/state preservation, selection and result scaling; production root build.
+Acceptance: manual mobile/desktop visual review remains required before further design increments.
+
+## UI redesign implementation and validation
+Version incremented once through version.mjs minor to 1.1.0.
+Completed: CSS-variable dark/cyan/violet theme, lightweight decorative SVG, reusable standalone line icon component, persisted Simple/Advanced toggle, state-derived step navigation, default/local list selection, live collection controls, top-three/full actual-GV result bars, full numeric advanced results, collapsible diagnostics/library/editor/storage/technical sections. Local list copying added. Reduced-motion styles and keyboard focus preserved.
+Camera, hotbit store, conditioning and analysis algorithms were not changed by this redesign.
+Validation: all 39 tests passed; production root build passed. Browser checks at 320/390/1200 CSS-pixel widths; no horizontal overflow at 320. Loaded Bachflower default (39 rates, minimum 450), checked Advanced library opening and return to Simple with loaded list retained. Mobile screenshot: WORK/ui-mobile-preview.png.
+Component-style production budget increased from 4/8 kB to 10/12 kB for the consolidated responsive UI (8.14 kB compiled style). Initial JS/CSS remains about 247 kB, within existing bundle budget.
+Manual acceptance: user review on smartphone and desktop, real-device camera/analysis and PWA offline regression remain pending. No commits or pushes.

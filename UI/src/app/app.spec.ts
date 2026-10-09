@@ -25,7 +25,7 @@ describe('Rate workspace', () => {
         app.available.set(12);
         fixture.detectChanges();
         const button = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('button')).find((element) =>
-            element.textContent?.includes('Analyze loaded list'),
+            element.textContent?.includes('Analyze List'),
         )!;
         expect(button.disabled).toBe(true);
         app.available.set(13);
@@ -103,6 +103,54 @@ describe('Rate workspace', () => {
             stop.mockRestore();
             analyze.mockRestore();
         });
+    });
+
+    it('preserves list, hotbits and results across modes and remembers the preference', () => {
+        const fixture = TestBed.createComponent(App);
+        const app = fixture.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/version.json').flush({ version: '1.1.0', description: 'Redesign' });
+        http.expectOne('/RATES/index.json').flush([]);
+        app.open('Selected', 'Arnica');
+        app.available.set(300);
+        app.results.set([{ name: 'Arnica', originalIndex: 0, energeticScore: 50, gv: 1180 }]);
+        app.setMode('advanced');
+        expect(localStorage.getItem('radionics.ui-mode')).toBe('advanced');
+        app.setMode('simple');
+        expect(app.name).toBe('Selected');
+        expect(app.available()).toBe(300);
+        expect(app.results()[0].gv).toBe(1180);
+        expect(app.resultWidth(590)).toBe(50);
+        expect(app.currentStep()).toBe(4);
+        app.results.set(
+            Array.from({ length: 4 }, (_, originalIndex) => ({
+                name: `Rate ${originalIndex}`,
+                originalIndex,
+                energeticScore: 50,
+                gv: 1000 - originalIndex * 100,
+            })),
+        );
+        fixture.detectChanges();
+        expect((fixture.nativeElement as HTMLElement).querySelectorAll('.results-list li').length).toBe(3);
+        app.expandedResults.set(true);
+        fixture.detectChanges();
+        expect((fixture.nativeElement as HTMLElement).querySelectorAll('.results-list li').length).toBe(4);
+        http.verify();
+    });
+
+    it('uses local lists from the simple selection control', () => {
+        const app = TestBed.createComponent(App).componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/version.json').flush({ version: '1.1.0', description: 'Redesign' });
+        http.expectOne('/RATES/index.json').flush([]);
+        app.saved.set([{ id: 'local-id', name: 'Local', content: 'A\nB', createdAt: '2026-10-09' }]);
+        app.listChoice = 'local:local-id';
+        app.useChosenList();
+        expect(app.rates().length).toBe(2);
+        expect(app.name).toBe('Local');
+        expect(app.readOnly).toBe(false);
+        expect(app.currentStep()).toBe(2);
+        http.verify();
     });
 
     it('loads the manifest and keeps predefined lists read-only', () => {
