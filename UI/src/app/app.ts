@@ -16,6 +16,7 @@ import { AnalysisResult } from './analysis';
 export class App {
     private readonly http = inject(HttpClient);
     private readonly store = inject(RateListStore);
+    readonly appVersion = signal<{ version: string; description: string } | undefined>(undefined);
     readonly defaults = signal<string[]>([]);
     readonly saved = signal<SavedList[]>([]);
     readonly rates = signal<Rate[]>([]);
@@ -40,6 +41,10 @@ export class App {
     readOnly = false;
 
     constructor() {
+        this.http.get<{ version: string; description: string }>('/version.json').subscribe({
+            next: (version) => this.appVersion.set(version),
+            error: () => {},
+        });
         const stop = () => this.camera.stop();
         const hidden = () => {
             if (document.hidden) {

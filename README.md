@@ -73,3 +73,27 @@ The final bonus of 95 or less is also added. GV can therefore exceed 1000;
 final sorting uses the extended value. The progress-bar minimum excludes these
 variable bonus draws. Camera collection continues when analysis is requested,
 including when an attempt exhausts currently stored hotbits.
+
+## Versioning
+
+Root `version.json` starts at `1.0.0` / `First version`. The application loads it
+and displays version and description in the footer. The build synchronizes it
+into Angular's public output and the service worker caches it with the app shell,
+so the version label matches the installed build, including offline use.
+
+From `UI`, increment once before building:
+
+```sh
+npm run release:major -- "Breaking release description"
+npm run release:minor -- "New feature description"
+npm run release:bugfix -- "Bugfix description"
+npm run deploy
+```
+
+Major resets minor/patch; minor resets patch; bugfix increments patch only.
+Ordinary builds do not increment versions. Future assistant changes follow the
+versioning instructions in `AGENTS.md`. No command commits or pushes.
+
+Website/PWA icons are in `UI/public/icons`; the master is `radionics-source.png`.
+Dedicated maskable variants include safe padding. The favicon includes 16, 32,
+48 and 256 pixel images; Apple touch uses 180 pixels.

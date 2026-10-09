@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const output = join(root, 'UI/dist/radionics/browser');
 const allowedFiles =
-    /^(index\.html|favicon\.ico|manifest\.webmanifest|ngsw\.json|ngsw-worker\.js|safety-worker\.js|worker-basic\.min\.js|.*\.(js|css|txt))$/;
+    /^(index\.html|version\.json|favicon\.ico|manifest\.webmanifest|ngsw\.json|ngsw-worker\.js|safety-worker\.js|worker-basic\.min\.js|.*\.(js|css|txt))$/;
 
 if (!existsSync(join(output, 'index.html'))) {
     throw new Error('Build the Angular application before preparing root files.');

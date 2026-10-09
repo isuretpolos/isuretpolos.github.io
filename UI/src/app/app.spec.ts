@@ -16,6 +16,9 @@ describe('Rate workspace', () => {
     it('enables analysis and fills progress as soon as the minimum count is available', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;
+        TestBed.inject(HttpTestingController)
+            .expectOne('/version.json')
+            .flush({ version: '1.0.0', description: 'First version' });
         TestBed.inject(HttpTestingController).expectOne('/RATES/index.json').flush([]);
         app.open('Test', 'Arnica');
         app.hotbitReady.set(true);
@@ -31,11 +34,16 @@ describe('Rate workspace', () => {
         const progress = (fixture.nativeElement as HTMLElement).querySelector('progress')!;
         expect(progress.value).toBe(13);
         expect(progress.max).toBe(13);
+        expect((fixture.nativeElement as HTMLElement).querySelector('footer')?.textContent).toContain('Version 1.0.0');
+        expect((fixture.nativeElement as HTMLElement).querySelector('footer')?.textContent).toContain('First version');
     });
 
     it('refreshes renamed default filenames on a 404 without blaming connectivity', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;
+        TestBed.inject(HttpTestingController)
+            .expectOne('/version.json')
+            .flush({ version: '1.0.0', description: 'First version' });
         const http = TestBed.inject(HttpTestingController);
         const manifest = http.expectOne('/RATES/index.json');
         expect(manifest.request.headers.get('ngsw-bypass')).toBe('true');
@@ -57,6 +65,9 @@ describe('Rate workspace', () => {
 
     it('uses the cached manifest when the network is unavailable', () => {
         const app = TestBed.createComponent(App).componentInstance;
+        TestBed.inject(HttpTestingController)
+            .expectOne('/version.json')
+            .flush({ version: '1.0.0', description: 'First version' });
         const http = TestBed.inject(HttpTestingController);
         http.expectOne('/RATES/index.json').error(new ProgressEvent('error'));
         const fallback = http.expectOne('/RATES/index.json');
@@ -69,6 +80,9 @@ describe('Rate workspace', () => {
     it.each([false, true])('keeps camera collection active during analysis (failure: %s)', (failure) => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;
+        TestBed.inject(HttpTestingController)
+            .expectOne('/version.json')
+            .flush({ version: '1.0.0', description: 'First version' });
         TestBed.inject(HttpTestingController).expectOne('/RATES/index.json').flush([]);
         app.open('Test', 'Arnica');
         app.camera.collecting.set(true);
@@ -94,6 +108,9 @@ describe('Rate workspace', () => {
     it('loads the manifest and keeps predefined lists read-only', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;
+        TestBed.inject(HttpTestingController)
+            .expectOne('/version.json')
+            .flush({ version: '1.0.0', description: 'First version' });
         const http = TestBed.inject(HttpTestingController);
         http.expectOne('/RATES/index.json').flush(['example.txt']);
         app.selectedDefault = 'example.txt';

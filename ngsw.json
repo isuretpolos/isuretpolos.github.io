@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1791554306234,
+  "timestamp": 1791555164242,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -13,9 +13,10 @@
       "urls": [
         "/favicon.ico",
         "/index.html",
-        "/main-IU7JA77T.js",
+        "/main-KL3KU7QK.js",
         "/manifest.webmanifest",
-        "/styles-OYHVVRSR.css"
+        "/styles-OYHVVRSR.css",
+        "/version.json"
       ],
       "patterns": []
     },
@@ -30,11 +31,19 @@
         "/icons/icon-128x128.png",
         "/icons/icon-144x144.png",
         "/icons/icon-152x152.png",
+        "/icons/icon-16x16.png",
+        "/icons/icon-180x180.png",
         "/icons/icon-192x192.png",
+        "/icons/icon-256x256.png",
+        "/icons/icon-32x32.png",
         "/icons/icon-384x384.png",
+        "/icons/icon-48x48.png",
         "/icons/icon-512x512.png",
         "/icons/icon-72x72.png",
-        "/icons/icon-96x96.png"
+        "/icons/icon-96x96.png",
+        "/icons/icon-maskable-192.png",
+        "/icons/icon-maskable-512.png",
+        "/icons/radionics-source.png"
       ],
       "patterns": []
     }
@@ -56,19 +65,28 @@
     }
   ],
   "hashTable": {
-    "/favicon.ico": "9c39f434fe1261f68c5e3eefdf734630d99c5670",
-    "/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
-    "/icons/icon-144x144.png": "b155fd5f2fd5d2ea7760721063003c4cd95fd783",
-    "/icons/icon-152x152.png": "eae6e0f0c8afb8aaae339e2a569b43e9238e5e6c",
-    "/icons/icon-192x192.png": "15c4180454633880d98674aa7394656196c91584",
-    "/icons/icon-384x384.png": "94a915751ef6c9282df9aea405ad679230631814",
-    "/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
-    "/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
-    "/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "/index.html": "a0ff0134bb52f654a0daed271d531c0a6f198f7c",
-    "/main-IU7JA77T.js": "f6a0a8317384ad7195211977ba86545933edb668",
-    "/manifest.webmanifest": "e44d051ed83d07ec30c99eee42c8d40bf5cccebd",
-    "/styles-OYHVVRSR.css": "cab1a85aacfcf6aefbcd1465a3753f3c90661bf5"
+    "/favicon.ico": "71e519aa1fe7ee6815864af9cf4199b77221c167",
+    "/icons/icon-128x128.png": "e2e9c65b714435cc0737f64e2f639938e6363fed",
+    "/icons/icon-144x144.png": "ebd8b44a72c2c8201983f564372c8357a8038bdd",
+    "/icons/icon-152x152.png": "3e14b76b6ab61303c230a133d2a06647bef5529a",
+    "/icons/icon-16x16.png": "405eb08225db13702ae476029d8da5e5daefd9c0",
+    "/icons/icon-180x180.png": "e4d5fcc48a3fa8d0597ca2936ea9b096e095f23c",
+    "/icons/icon-192x192.png": "d6aea7dda07fa6c594ee4302683171c0e0caf533",
+    "/icons/icon-256x256.png": "a3e12ab59e18ff1b8f90beae9f7b5ea3c99b9f26",
+    "/icons/icon-32x32.png": "f4e6cb51c7306a56301b574c6e0f145fd078faf2",
+    "/icons/icon-384x384.png": "ce6776c792217ba112e91b7ce52f973882acb4ba",
+    "/icons/icon-48x48.png": "e8ccd81a815c432da0691e32bf2c9d0277adc99d",
+    "/icons/icon-512x512.png": "8aecf87ab98422dc6f59be57bb471152f8da3a94",
+    "/icons/icon-72x72.png": "964f87922046dc0938cc9261d9becbb6ad75e736",
+    "/icons/icon-96x96.png": "83998f0495b90352530a270a36b815f55e7d647d",
+    "/icons/icon-maskable-192.png": "50d05603c7304d6dd080c30bf1d5d32d4f9bb797",
+    "/icons/icon-maskable-512.png": "db1d3de5f0d6cf4c3836b871de730b293dac8491",
+    "/icons/radionics-source.png": "80a88862eef0771cfd9df735db225df4f8bd0929",
+    "/index.html": "e3af4a93b42d82ddeed2fa0e89d711349c3d41ec",
+    "/main-KL3KU7QK.js": "9cb80a604fd21d2e4f70caec7329660588f275b4",
+    "/manifest.webmanifest": "c2a272c4321a2a8b02e1c8e5310572dbc008ea85",
+    "/styles-OYHVVRSR.css": "cab1a85aacfcf6aefbcd1465a3753f3c90661bf5",
+    "/version.json": "b6c79dbea793c7493337658744f299c8892d6e69"
   },
   "navigationUrls": [
     {
