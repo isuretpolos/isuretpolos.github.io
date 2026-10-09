@@ -1,4 +1,5 @@
 import { Rate } from './rate-list';
+import { expandGv } from './gv-expansion';
 
 export interface AnalysisResult extends Rate {
     energeticScore: number;
@@ -56,13 +57,6 @@ export function analyzeRates(rates: Rate[], draws: { integer: (maximum: number) 
 }
 
 export function calculateGv(draws: { integer: (maximum: number) => number }): number {
-    let gv = Math.max(draws.integer(1000), draws.integer(1000), draws.integer(1000));
-    if (gv > 950) {
-        let bonus: number;
-        do {
-            bonus = draws.integer(100);
-            gv += bonus;
-        } while (bonus > 95);
-    }
-    return gv;
+    const base = Math.max(draws.integer(1000), draws.integer(1000), draws.integer(1000));
+    return expandGv(base, draws).gv;
 }

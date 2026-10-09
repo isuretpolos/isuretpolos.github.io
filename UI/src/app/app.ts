@@ -9,10 +9,12 @@ import { AnalysisResult } from './analysis';
 import { Icon } from './icon';
 import { PwaUpdates } from './pwa-updates';
 import { PhotoAnalysis } from './photo-analysis';
+import { LiveAnalysis } from './live-analysis';
+import { Fullscreen } from './fullscreen';
 
 @Component({
     selector: 'app-root',
-    imports: [FormsModule, Icon, PhotoAnalysis],
+    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
@@ -33,6 +35,8 @@ export class App {
     private readonly hotbits = inject(HotbitStore);
     readonly available = signal(0);
     readonly consumed = signal(0);
+    readonly fullscreen = inject(Fullscreen);
+    readonly liveBusy = signal(false);
     readonly photoBusy = signal(false);
     readonly analyzing = signal(false);
     readonly results = signal<AnalysisResult[]>([]);
@@ -309,7 +313,7 @@ export class App {
     }
 
     runAnalysis(): void {
-        if (this.updateApplying() || this.photoBusy() || this.analyzing() || !this.rates().length) {
+        if (this.updateApplying() || this.liveBusy() || this.photoBusy() || this.analyzing() || !this.rates().length) {
             return;
         }
         const rates = this.rates().map((rate) => ({ ...rate }));
@@ -341,6 +345,7 @@ export class App {
         if (
             !this.updates.ready() ||
             this.camera.collecting() ||
+            this.liveBusy() ||
             this.photoBusy() ||
             this.analyzing() ||
             this.updateApplying()
@@ -351,7 +356,7 @@ export class App {
         // A stopped camera can still have a final IndexedDB batch queued for persistence.
         this.writes
             .then(() => {
-                if (!this.camera.collecting() && !this.photoBusy() && !this.analyzing()) {
+                if (!this.camera.collecting() && !this.liveBusy() && !this.photoBusy() && !this.analyzing()) {
                     this.updates.reload();
                 }
             })

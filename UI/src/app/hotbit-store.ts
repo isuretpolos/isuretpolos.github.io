@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { AnalysisResult, analyzeRates, HotbitDraws } from './analysis';
 import { Rate } from './rate-list';
 import { analyzePhotoGrid, PhotoCell } from './photo-grid';
+import { calculateLiveGv } from './gv-expansion';
 
 interface Batch {
     id?: number;
@@ -71,6 +72,10 @@ export class HotbitStore {
 
     analyzePhoto(width: number, height: number, grid: number): Promise<PhotoCell[]> {
         return this.consume((draws) => analyzePhotoGrid(width, height, grid, draws));
+    }
+
+    liveMeasurement(): Promise<ReturnType<typeof calculateLiveGv>> {
+        return this.consume((draws) => calculateLiveGv(draws));
     }
 
     private consume<T>(analysis: (draws: HotbitDraws) => T): Promise<T> {

@@ -57,3 +57,12 @@ html {
         transition: none !important;
     }
 }
+.fullscreen-fallback {
+    position: fixed !important;
+    inset: 0;
+    z-index: 1000;
+    width: 100%;
+    height: 100dvh;
+    overflow: auto;
+    background: var(--background);
+}

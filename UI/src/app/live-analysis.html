@@ -1,0 +1,93 @@
+<details class="live-section" #panel>
+    <summary>Live Analysis <small>Real-time experimental General Vitality</small></summary>
+    <div class="live-content">
+        <header>
+            <div>
+                <h2>Live Analysis</h2>
+                <p>Experimental GV · not a biological or medical signal</p>
+            </div>
+            <label
+                >BPM<select [ngModel]="session.bpm()" (ngModelChange)="session.setBpm(+$event)">
+                    @for (bpm of rates; track bpm) {
+                    <option [ngValue]="bpm">{{ bpm }} BPM</option>
+                    }
+                </select></label
+            >
+        </header>
+        <div class="current">
+            <span>Current GV</span><strong>{{ current() === undefined ? '—' : signed(current()!) }}</strong>
+        </div>
+        <div class="chart"><app-live-waveform /></div>
+        <div class="statistics">
+            <span>Peak {{ signed(session.positivePeak()) }}</span><span>Low {{ signed(session.negativePeak()) }}</span
+            ><span>{{ elapsed() }}</span>
+        </div>
+        <p class="status" role="status">{{ session.status() }} · {{ available() }} Hotbits available</p>
+        <div class="controls">
+            <button
+                class="primary"
+                (click)="startPause()"
+                [disabled]="session.pending() || (blocked() && session.state() !== 'running')"
+            >
+                {{ session.state() === 'running' ? 'Pause' : session.state() === 'paused' ? 'Resume' : 'Start' }}
+            </button>
+            <button (click)="session.stop()">Stop</button
+            ><button (click)="fullscreen.toggle(panel)">
+                {{ fullscreen.target() ? 'Exit fullscreen' : 'Fullscreen' }}
+            </button>
+        </div>
+        @if (fullscreen.error()) {
+        <p role="status">{{ fullscreen.error() }}</p>
+        }
+        <div class="secondary-controls">
+            <button (click)="clear()" [disabled]="session.pending()">Clear</button
+            ><button (click)="exportCsv()" [disabled]="!session.readings().length">Export CSV</button>
+        </div>
+        @if (mode() === 'advanced') {
+        <details class="diagnostics">
+            <summary>Live Diagnostics</summary>
+            <p>BPM means measurements per minute. {{ session.bpm() }} BPM · {{ 60000 / session.bpm() }} ms interval</p>
+            <p>
+                Total measurements: {{ session.total() }} · Expansion draws: {{ session.expansions() }} · Iteration
+                limits reached: {{ session.limits() }}
+            </p>
+            <p>
+                Current GV: {{ current() === undefined ? '—' : signed(current()!) }} · Peak {{
+                signed(session.positivePeak()) }} · Low {{ signed(session.negativePeak()) }}
+            </p>
+            <p>
+                Symmetric chart scale: ±{{ session.scale() }} · Elapsed {{ elapsed() }} · Available Hotbits: {{
+                available() }}
+            </p>
+            <p>
+                History and CSV contain at most the latest 600 actual readings. Missing/background measurements are not
+                backfilled. Backgrounding pauses the session; resume explicitly.
+            </p>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Elapsed ms</th>
+                            <th>Base GV</th>
+                            <th>Final GV</th>
+                            <th>Expansions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (reading of session.readings(); track reading.timestamp + ':' + reading.elapsedMs) {
+                        <tr>
+                            <td>{{ reading.timestamp }}</td>
+                            <td>{{ reading.elapsedMs.toFixed(0) }}</td>
+                            <td>{{ reading.baseGv }}</td>
+                            <td>{{ reading.gv }}</td>
+                            <td>{{ reading.expansionCount }}</td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </details>
+        }
+    </div>
+</details>

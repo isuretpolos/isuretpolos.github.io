@@ -565,3 +565,17 @@ footer {
     background: var(--background-secondary);
     font-size: 0.85rem;
 }
+.global-fullscreen {
+    position: absolute;
+    left: 0;
+    font-size: 0.75rem;
+    padding: 8px;
+}
+@media (max-width: 720px) {
+    .app-header {
+        padding-bottom: 50px;
+    }
+    .global-fullscreen {
+        bottom: 0;
+    }
+}

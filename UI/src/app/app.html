@@ -4,6 +4,9 @@
             <h1>Radionics Workspace</h1>
             <p class="eyebrow">ISURET POLOS · LOCAL RESEARCH</p>
         </div>
+        <button class="global-fullscreen secondary" (click)="fullscreen.toggle()">
+            {{ fullscreen.target() ? 'Exit fullscreen' : 'Fullscreen' }}
+        </button>
         <button class="icon-button secondary" (click)="setMode('advanced')" aria-label="Open advanced settings">
             <app-icon name="settings" />
         </button>
@@ -44,11 +47,11 @@
         <button
             class="secondary"
             (click)="updateNow()"
-            [disabled]="camera.collecting() || photoBusy() || analyzing() || updateApplying()"
+            [disabled]="camera.collecting() || liveBusy() || photoBusy() || analyzing() || updateApplying()"
         >
             Update now
         </button>
-        @if (camera.collecting() || photoBusy() || analyzing()) {
+        @if (camera.collecting() || liveBusy() || photoBusy() || analyzing()) {
         <small>Finish collection and analysis before updating.</small> }
     </aside>
     }
@@ -163,7 +166,7 @@
             <button
                 class="analysis-button full"
                 (click)="runAnalysis()"
-                [disabled]="updateApplying() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
+                [disabled]="updateApplying() || liveBusy() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
             >
                 <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
@@ -428,8 +431,15 @@
     <app-photo-analysis
         [mode]="mode()"
         [available]="available()"
-        [blocked]="analyzing() || updateApplying()"
+        [blocked]="liveBusy() || analyzing() || updateApplying()"
         (busyChange)="photoBusy.set($event)"
+        (countsChanged)="refreshHotbits()"
+    />
+    <app-live-analysis
+        [mode]="mode()"
+        [available]="available()"
+        [blocked]="photoBusy() || analyzing() || updateApplying()"
+        (busyChange)="liveBusy.set($event)"
         (countsChanged)="refreshHotbits()"
     />
     <footer>

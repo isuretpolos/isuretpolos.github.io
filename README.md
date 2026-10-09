@@ -151,3 +151,5 @@ This is experimental random-based radionics selection, not validated anomaly
 detection, scientific image forensics or medical diagnosis. Camera permission
 requires HTTPS/localhost. Device camera sharing limitations may require stopping
 hotbit collection before taking a photo; importing an image avoids that conflict.
+
+Live Analysis (1.4.0) draws signed GV measurements from stored Hotbits at 10, 30, 60 or 120 BPM. Its canvas shows the latest 60 seconds around zero; history and CSV retain up to 600 actual readings. It pauses on backgrounding or exhausted Hotbits and never invents missing measurements. Advanced Mode shows diagnostics. Fullscreen uses the browser API with a CSS fallback. This is an experimental random-based visualization, not a medical or biological signal.
