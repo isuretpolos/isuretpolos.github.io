@@ -2,16 +2,83 @@
     <header>
         <p class="eyebrow">ISURET POLOS · LOCAL RESEARCH</p>
         <h1>Radionics workspace</h1>
-        <p>Prepare your rate lists. Your imported lists stay in this browser.</p>
+        <p>Load a list, collect webcam hotbits, then analyze. Your data stays in this browser.</p>
     </header>
     <aside class="notice">
-        Research tool · Random scores do not establish physical energy or clinical properties. Camera collection and
-        analysis are planned for the next increments.
+        Research tool · Random scores do not establish physical energy or clinical properties. Webcam-derived
+        experimental randomness · entropy is not verified.
     </aside>
     @if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
     }
     <p role="status">{{ message() }}</p>
+    <section class="analysis-panel" aria-labelledby="analysis-title">
+        <h2 id="analysis-title">Analyze your loaded list</h2>
+        <p>
+            1. Start collection and allow camera access. 2. Stop collection to save a partial batch. 3. Analyze when
+            enough hotbits are available.
+        </p>
+        <p>
+            No camera images or raw random values are displayed or uploaded. Collection stops when this page is hidden.
+        </p>
+        <div class="actions">
+            <button (click)="startCollection()" [disabled]="camera.collecting() || analyzing() || !hotbitReady()">
+                Start camera collection
+            </button>
+            <button class="secondary" (click)="camera.stop()">Stop &amp; save collection</button>
+            <button
+                (click)="runAnalysis()"
+                [disabled]="analyzing() || !rates().length || !hotbitReady() || available() < required()"
+            >
+                {{ analyzing() ? 'Analyzing…' : 'Analyze loaded list' }}
+            </button>
+            <button class="secondary" (click)="requestPersistence()">Request persistent storage</button>
+        </div>
+        <p role="status">{{ camera.status() }} · Available: {{ available() }} integers · Consumed: {{ consumed() }}</p>
+        <p>
+            Minimum for this list: {{ required() }} integers. Rejection sampling may need additional hotbits. Batches
+            save at approximately 10,000 integers or when collection stops.
+        </p>
+        <p class="hint">
+            {{ camera.health() }} · Candidate samples: {{ camera.rawSamples() }} · Conditioned bits: {{
+            camera.usableBits() }} · Equal samples discarded: {{ camera.rejectedSamples() }}
+        </p>
+        <p class="hint">
+            Von Neumann pair conditioning reduces bias only when its independence assumptions hold. Motion, exposure
+            changes and camera artifacts can produce correlations. These basic checks do not prove unpredictability.
+        </p>
+        @if (results().length) {
+        <h3>Analysis results · {{ resultListName() }}</h3>
+        <div class="result-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Rate</th>
+                        <th scope="col">Energetic score</th>
+                        <th scope="col">GV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (result of results(); track result.originalIndex) {
+                    <tr>
+                        <td>
+                            @if (result.url) {
+                            <a [href]="result.url" target="_blank" rel="noopener noreferrer">{{ result.name }}</a> }
+                            @else { {{ result.name }} }
+                        </td>
+                        <td>{{ result.energeticScore }}</td>
+                        <td>{{ result.gv }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="hint">
+            Score: sum of ten 0–10 draws. GV: maximum of three 0–1000 draws, intentionally favoring high values. Results
+            are ordered by GV, score, then original list order.
+        </p>
+        }
+    </section>
     <div class="workspace">
         <section aria-labelledby="library-title">
             <h2 id="library-title">Rate library</h2>

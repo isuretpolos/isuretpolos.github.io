@@ -103,3 +103,19 @@ footer {
         padding: 24px 16px;
     }
 }
+.analysis-panel {
+    margin-top: 24px;
+}
+.result-scroll {
+    overflow-x: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th,
+td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #d8e1d9;
+}

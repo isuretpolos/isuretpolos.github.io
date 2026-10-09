@@ -1,8 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { parseRates, Rate, SavedList } from './rate-list';
 import { RateListStore } from './rate-list-store';
+import { HotbitStore } from './hotbit-store';
+import { CameraHotbits } from './camera-hotbits';
+import { AnalysisResult } from './analysis';
 
 @Component({
     selector: 'app-root',
@@ -20,6 +23,16 @@ export class App {
     readonly error = signal('');
     readonly loading = signal(false);
     readonly storageReady = signal(false);
+    readonly camera = inject(CameraHotbits);
+    private readonly hotbits = inject(HotbitStore);
+    readonly available = signal(0);
+    readonly consumed = signal(0);
+    readonly analyzing = signal(false);
+    readonly results = signal<AnalysisResult[]>([]);
+    readonly resultListName = signal('');
+    readonly hotbitReady = signal(false);
+    private writes: Promise<void> = Promise.resolve();
+    readonly required = (): number => this.rates().length * 10 + Math.min(20, this.rates().length) * 3;
     name = '';
     content = '';
     selectedDefault = '';
@@ -27,6 +40,20 @@ export class App {
     readOnly = false;
 
     constructor() {
+        const stop = () => this.camera.stop();
+        const hidden = () => {
+            if (document.hidden) {
+                stop();
+            }
+        };
+        window.addEventListener('pagehide', stop);
+        document.addEventListener('visibilitychange', hidden);
+        inject(DestroyRef).onDestroy(() => {
+            stop();
+            window.removeEventListener('pagehide', stop);
+            document.removeEventListener('visibilitychange', hidden);
+        });
+        this.refreshHotbits();
         try {
             this.saved.set(this.store.load());
             this.storageReady.set(true);
@@ -71,6 +98,7 @@ export class App {
     }
 
     newList(): void {
+        this.results.set([]);
         this.name = '';
         this.content = '';
         this.editingId = undefined;
@@ -88,6 +116,7 @@ export class App {
     }
 
     preview(): void {
+        this.results.set([]);
         this.rates.set(parseRates(this.content));
         this.message.set(`${this.rates().length} rates loaded. Duplicate names retain their original order.`);
         this.error.set('');
@@ -142,6 +171,76 @@ export class App {
         link.download = `${this.name.replace(/[^a-zA-Z0-9 _-]/g, '_') || 'rates'}.txt`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    startCollection(): void {
+        this.error.set('');
+        this.camera
+            .start((words) => {
+                this.writes = this.writes
+                    .then(() => this.hotbits.append(words))
+                    .then(() => this.refreshHotbits())
+                    .catch((error) => {
+                        this.camera.stop();
+                        this.fail(error);
+                    });
+            })
+            .catch((error) => this.fail(error));
+    }
+
+    runAnalysis(): void {
+        if (this.analyzing() || !this.rates().length) {
+            return;
+        }
+        this.camera.stop();
+        const rates = this.rates().map((rate) => ({ ...rate }));
+        const listName = this.name || 'Untitled list';
+        this.analyzing.set(true);
+        this.results.set([]);
+        this.error.set('');
+        this.writes
+            .then(() => this.hotbits.analyze(rates))
+            .then((results) => {
+                this.results.set(results);
+                this.resultListName.set(listName);
+                this.message.set('Analysis complete. All random draws consumed fresh stored hotbits.');
+            })
+            .catch((error) => this.fail(error))
+            .finally(() => {
+                this.analyzing.set(false);
+                this.refreshHotbits();
+            });
+    }
+
+    requestPersistence(): void {
+        if (!navigator.storage?.persist) {
+            this.fail(new Error('Persistent storage requests are unsupported in this browser.'));
+            return;
+        }
+        navigator.storage
+            .persist()
+            .then((granted) =>
+                this.message.set(
+                    granted
+                        ? 'Persistent browser storage granted. Clearing site data still erases local data.'
+                        : 'Persistent storage was not granted. Browser data may be evicted.',
+                ),
+            )
+            .catch((error) => this.fail(error));
+    }
+
+    private refreshHotbits(): Promise<void> {
+        return this.hotbits
+            .counts()
+            .then((counts) => {
+                this.available.set(counts.available);
+                this.consumed.set(counts.consumed);
+                this.hotbitReady.set(true);
+            })
+            .catch((error) => {
+                this.hotbitReady.set(false);
+                this.fail(error);
+            });
     }
 
     private fail(error: unknown): void {
