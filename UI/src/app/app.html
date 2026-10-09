@@ -44,11 +44,12 @@
         <button
             class="secondary"
             (click)="updateNow()"
-            [disabled]="camera.collecting() || analyzing() || updateApplying()"
+            [disabled]="camera.collecting() || photoBusy() || analyzing() || updateApplying()"
         >
             Update now
         </button>
-        @if (camera.collecting() || analyzing()) { <small>Finish collection and analysis before updating.</small> }
+        @if (camera.collecting() || photoBusy() || analyzing()) {
+        <small>Finish collection and analysis before updating.</small> }
     </aside>
     }
     <div class="mode-switch" role="group" aria-label="Interface mode">
@@ -162,7 +163,7 @@
             <button
                 class="analysis-button full"
                 (click)="runAnalysis()"
-                [disabled]="updateApplying() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
+                [disabled]="updateApplying() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
             >
                 <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
@@ -424,6 +425,13 @@
         </details>
     </div>
     }
+    <app-photo-analysis
+        [mode]="mode()"
+        [available]="available()"
+        [blocked]="analyzing() || updateApplying()"
+        (busyChange)="photoBusy.set($event)"
+        (countsChanged)="refreshHotbits()"
+    />
     <footer>
         <p>Local research · Experimental randomness</p>
         @if (appVersion(); as version) {

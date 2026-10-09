@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AnalysisResult, analyzeRates, HotbitDraws } from './analysis';
 import { Rate } from './rate-list';
+import { analyzePhotoGrid, PhotoCell } from './photo-grid';
 
 interface Batch {
     id?: number;
@@ -65,6 +66,14 @@ export class HotbitStore {
     }
 
     analyze(rates: Rate[]): Promise<AnalysisResult[]> {
+        return this.consume((draws) => analyzeRates(rates, draws));
+    }
+
+    analyzePhoto(width: number, height: number, grid: number): Promise<PhotoCell[]> {
+        return this.consume((draws) => analyzePhotoGrid(width, height, grid, draws));
+    }
+
+    private consume<T>(analysis: (draws: HotbitDraws) => T): Promise<T> {
         return this.open().then(
             (database) =>
                 new Promise((resolve, reject) => {
@@ -74,7 +83,7 @@ export class HotbitStore {
                     const request = store.getAll();
                     const metadata = transaction.objectStore('metadata');
                     const total = metadata.get('consumed');
-                    let result: AnalysisResult[] = [];
+                    let result: T;
                     let failure: unknown;
                     request.onsuccess = () => {
                         const batches = request.result as Batch[];
@@ -88,7 +97,7 @@ export class HotbitStore {
                         }
                         const draws = new HotbitDraws(words);
                         try {
-                            result = analyzeRates(rates, draws);
+                            result = analysis(draws);
                         } catch (error) {
                             failure = error;
                         }

@@ -29,6 +29,19 @@ describe('IndexedDB hotbit transactions', () => {
             .finally(() => spy.mockRestore());
     });
 
+    it('shares consumption between photo and rate analysis without reusing material', () => {
+        const store = new HotbitStore();
+        return store
+            .append(new Uint32Array(781))
+            .then(() => store.analyzePhoto(800, 400, 16))
+            .then((cells) => {
+                expect(cells.length).toBe(3);
+                return store.analyze([{ name: 'A', originalIndex: 0 }]);
+            })
+            .then(() => store.counts())
+            .then((counts) => expect(counts).toEqual({ available: 0, consumed: 781 }));
+    });
+
     it('serializes simultaneous analyses without reusing words', () => {
         const store = new HotbitStore();
         return store

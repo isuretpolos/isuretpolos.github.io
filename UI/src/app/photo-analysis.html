@@ -1,0 +1,113 @@
+<details class="photo-section">
+    <summary>Photo Analysis <small>Optional · local image workflow</small></summary>
+    <div class="content">
+        <p class="note">
+            Experimental radionics-style random scoring. Not scientific image forensics, medical diagnosis or validated
+            anomaly detection.
+        </p>
+        @if (error()) {
+        <p role="alert" class="error">{{ error() }}</p>
+        }
+        <div class="controls">
+            <button (click)="startCamera()" [disabled]="blocked() || loading() || analyzing() || cameraOpen()">
+                Take Photo
+            </button>
+            <label class="upload"
+                >Upload Photo<input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+                    (change)="upload($event)"
+                    [disabled]="blocked() || loading() || analyzing() || cameraOpen()"
+            /></label>
+        </div>
+        <div [hidden]="!cameraOpen()" class="camera-preview">
+            <video #cameraVideo muted playsinline aria-label="Local photo camera preview"></video>
+            <button (click)="capturePhoto()" [disabled]="loading()">Capture Photo</button>
+            <button (click)="stopCamera()">Cancel Camera</button>
+        </div>
+        @if (photos().length) {
+        <label for="session-photo">Already loaded image</label>
+        <select
+            id="session-photo"
+            [(ngModel)]="selectedId"
+            (ngModelChange)="selectPhoto()"
+            [disabled]="analyzing() || loading() || cameraOpen()"
+        >
+            @for (photo of photos(); track photo.id) {
+            <option [ngValue]="photo.id">{{ photo.name }}</option>
+            }
+        </select>
+        }
+        <label for="photo-grid">Grid size</label>
+        <select id="photo-grid" [(ngModel)]="grid" [disabled]="analyzing() || loading()">
+            @for (size of gridOptions; track size) {
+            <option [ngValue]="size">{{ size }}×{{ size }}</option>
+            }
+        </select>
+        @if (mode() === 'advanced') {
+        <p class="note">
+            {{ grid * grid }} cells · 3 markers. Denser grids evaluate more, smaller cells and consume more Hotbits.
+            Each cell receives the same three-draw GV plus the existing bonus rule. Pixel color and brightness do not
+            influence ranking.
+        </p>
+        }
+        <p class="note">
+            Available: {{ available() }} · Minimum: {{ minimum() }} Hotbits. Bonus draws and rejection sampling may
+            require more.
+        </p>
+        @if (selected(); as photo) {
+        <figure>
+            <img [src]="photo.url" [alt]="'Selected photo: ' + photo.name" />
+            <figcaption>{{ photo.name }} · {{ photo.image.naturalWidth }}×{{ photo.image.naturalHeight }}</figcaption>
+        </figure>
+        }
+        <button
+            class="analyze"
+            (click)="analyze()"
+            [disabled]="!selected() || available() < minimum() || blocked() || loading() || analyzing() || cameraOpen()"
+        >
+            {{ analyzing() ? 'Analyzing image…' : 'Analyze Image' }}
+        </button>
+        @if (resultUrl()) {
+        <h3>Result · {{ resultName() }} · {{ resultGrid() }}×{{ resultGrid() }}</h3>
+        <img
+            class="result"
+            [src]="resultUrl()"
+            alt="Analyzed photo with three small red crosses at the top ranked cell centers"
+        />
+        <ol>
+            @for (cell of markers(); track cell.index) {
+            <li>Rank {{ $index + 1 }}: GV {{ cell.gv }} · column {{ cell.column }}, row {{ cell.row }}</li>
+            }
+        </ol>
+        <button (click)="exportResult()">Export result PNG</button>
+        @if (mode() === 'advanced') {
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Column / row</th>
+                        <th>Center (px)</th>
+                        <th>GV</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (cell of markers(); track cell.index) {
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ cell.column }} / {{ cell.row }}</td>
+                        <td>{{ cell.centerX.toFixed(2) }}, {{ cell.centerY.toFixed(2) }}</td>
+                        <td>{{ cell.gv }}</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        } }
+        <p class="note">
+            Photos and results remain in memory for this session. Nothing is uploaded or stored permanently. At most
+            five source images are kept; the last result stays visible until replaced.
+        </p>
+    </div>
+</details>

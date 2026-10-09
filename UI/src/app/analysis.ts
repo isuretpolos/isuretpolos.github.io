@@ -45,14 +45,7 @@ export function analyzeRates(rates: Rate[], draws: { integer: (maximum: number) 
     );
     const selected = scored.slice(0, 20);
     for (const rate of selected) {
-        rate.gv = Math.max(draws.integer(1000), draws.integer(1000), draws.integer(1000));
-        if (rate.gv > 950) {
-            let bonus: number;
-            do {
-                bonus = draws.integer(100);
-                rate.gv += bonus;
-            } while (bonus > 95);
-        }
+        rate.gv = calculateGv(draws);
     }
     return selected.sort(
         (left, right) =>
@@ -60,4 +53,16 @@ export function analyzeRates(rates: Rate[], draws: { integer: (maximum: number) 
             right.energeticScore - left.energeticScore ||
             left.originalIndex - right.originalIndex,
     );
+}
+
+export function calculateGv(draws: { integer: (maximum: number) => number }): number {
+    let gv = Math.max(draws.integer(1000), draws.integer(1000), draws.integer(1000));
+    if (gv > 950) {
+        let bonus: number;
+        do {
+            bonus = draws.integer(100);
+            gv += bonus;
+        } while (bonus > 95);
+    }
+    return gv;
 }

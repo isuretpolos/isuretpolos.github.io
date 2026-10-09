@@ -8,10 +8,11 @@ import { CameraHotbits } from './camera-hotbits';
 import { AnalysisResult } from './analysis';
 import { Icon } from './icon';
 import { PwaUpdates } from './pwa-updates';
+import { PhotoAnalysis } from './photo-analysis';
 
 @Component({
     selector: 'app-root',
-    imports: [FormsModule, Icon],
+    imports: [FormsModule, Icon, PhotoAnalysis],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
@@ -32,6 +33,7 @@ export class App {
     private readonly hotbits = inject(HotbitStore);
     readonly available = signal(0);
     readonly consumed = signal(0);
+    readonly photoBusy = signal(false);
     readonly analyzing = signal(false);
     readonly results = signal<AnalysisResult[]>([]);
     readonly resultListName = signal('');
@@ -307,7 +309,7 @@ export class App {
     }
 
     runAnalysis(): void {
-        if (this.updateApplying() || this.analyzing() || !this.rates().length) {
+        if (this.updateApplying() || this.photoBusy() || this.analyzing() || !this.rates().length) {
             return;
         }
         const rates = this.rates().map((rate) => ({ ...rate }));
@@ -336,14 +338,20 @@ export class App {
     }
 
     updateNow(): void {
-        if (!this.updates.ready() || this.camera.collecting() || this.analyzing() || this.updateApplying()) {
+        if (
+            !this.updates.ready() ||
+            this.camera.collecting() ||
+            this.photoBusy() ||
+            this.analyzing() ||
+            this.updateApplying()
+        ) {
             return;
         }
         this.updateApplying.set(true);
         // A stopped camera can still have a final IndexedDB batch queued for persistence.
         this.writes
             .then(() => {
-                if (!this.camera.collecting() && !this.analyzing()) {
+                if (!this.camera.collecting() && !this.photoBusy() && !this.analyzing()) {
                     this.updates.reload();
                 }
             })
@@ -369,7 +377,7 @@ export class App {
             .catch((error) => this.fail(error));
     }
 
-    private refreshHotbits(): Promise<void> {
+    refreshHotbits(): Promise<void> {
         return this.hotbits
             .counts()
             .then((counts) => {

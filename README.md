@@ -127,3 +127,27 @@ the foreground and check the banner. Verify updating is blocked while collecting
 or analyzing; stop/finish, click Update now, and confirm the installed version
 and saved rate lists/hotbit count after reload. Existing site origin and storage
 schema are unchanged.
+
+## Photo Analysis (1.3.0)
+
+Open the optional Photo Analysis panel to take a camera photo, load a local
+PNG/JPEG/WebP/GIF/BMP image, or select one of up to five session-loaded images.
+Choose 50×50 (default, 2500 cells), 25×25 (625), or 16×16 (256). Each cell
+receives the shared three-draw GV and >950 bonus procedure; no pixel-derived
+weighting is used. Cells sort by GV, with row-major position breaking ties.
+The three highest values get fine red crosses at cell centers. The canvas and
+export preserve natural image dimensions and proportions; no 50-pixel thumbnail
+is substituted for the original. Source/result data stays in memory and is
+released on page teardown. Images over 40 megapixels are rejected explicitly.
+
+Minimum hotbit counts are 7500, 1875, and 768 respectively; bonus draws and
+rejection sampling require additional material. Collection may continue while
+analyzing. Photo/rate draws use the same serialized IndexedDB consumption path.
+PWA updates are blocked during camera capture, image decoding and photo analysis.
+Use Export result PNG to download the composited image. Advanced mode adds grid
+density notes and a coordinate/GV table. Positions are 1-based column/row.
+
+This is experimental random-based radionics selection, not validated anomaly
+detection, scientific image forensics or medical diagnosis. Camera permission
+requires HTTPS/localhost. Device camera sharing limitations may require stopping
+hotbit collection before taking a photo; importing an image avoids that conflict.

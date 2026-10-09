@@ -1,0 +1,130 @@
+.photo-section {
+    margin-top: 22px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--card), var(--background-secondary));
+}
+summary {
+    cursor: pointer;
+    padding: 20px;
+    min-height: 44px;
+    font-weight: 600;
+}
+small {
+    display: block;
+    margin: 6px 0 0 18px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+.content {
+    padding: 0 20px 20px;
+}
+.note,
+figcaption {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+button,
+.upload {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 18px;
+    border: 1px solid var(--cyan);
+    border-radius: 12px;
+    color: var(--text);
+    background: var(--background-secondary);
+    cursor: pointer;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+button:hover:not(:disabled) {
+    background: var(--teal);
+}
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.upload {
+    position: relative;
+    overflow: hidden;
+}
+.upload input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+}
+.upload:focus-within {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+}
+label:not(.upload) {
+    display: block;
+    margin: 16px 0 8px;
+}
+select {
+    min-height: 44px;
+    width: 100%;
+    padding: 12px;
+    background: var(--background);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+figure {
+    margin: 16px 0;
+}
+img,
+video {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    margin: 12px auto;
+    border-radius: 4px;
+}
+.camera-preview[hidden] {
+    display: none;
+}
+.camera-preview button {
+    margin: 4px;
+}
+.analyze {
+    background: linear-gradient(135deg, var(--violet), var(--background-secondary));
+    width: 100%;
+    justify-content: center;
+    border-color: var(--violet);
+}
+.error {
+    color: var(--error);
+    border: 1px solid var(--error);
+    padding: 12px;
+    border-radius: 12px;
+}
+.table-scroll {
+    overflow-x: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+}
+td,
+th {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+}
+@media (max-width: 420px) {
+    .content {
+        padding: 0 14px 14px;
+    }
+}
