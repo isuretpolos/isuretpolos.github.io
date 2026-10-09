@@ -66,3 +66,10 @@ cumulative during a session. The minimum-count progress bar uses committed
 IndexedDB integers; analysis enables immediately when that minimum is available.
 Rejection sampling can still require additional integers. These movement filters
 and health gates remain experimental, not an entropy certification.
+
+GV extension: a base GV strictly above 950 triggers an additional inclusive
+0–100 hotbit draw. Add it to GV, and repeat if that bonus is strictly above 95.
+The final bonus of 95 or less is also added. GV can therefore exceed 1000;
+final sorting uses the extended value. The progress-bar minimum excludes these
+variable bonus draws. Camera collection continues when analysis is requested,
+including when an attempt exhausts currently stored hotbits.

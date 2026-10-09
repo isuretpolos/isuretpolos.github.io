@@ -38,8 +38,8 @@
         <progress id="hotbit-progress" [value]="available()" [max]="required() || 1"></progress>
         <p role="status">{{ camera.status() }} · Available: {{ available() }} integers · Consumed: {{ consumed() }}</p>
         <p>
-            Minimum for this list: {{ required() }} integers. Rejection sampling may need additional hotbits. Validated
-            sample windows save automatically during collection.
+            Minimum for this list: {{ required() }} integers. Rejection sampling and GV bonuses may need additional
+            hotbits. Validated sample windows save automatically during collection.
         </p>
         <p class="hint">
             {{ camera.health() }} · Candidate samples: {{ camera.rawSamples() }} · Conditioned bits: {{
@@ -76,8 +76,8 @@
             </table>
         </div>
         <p class="hint">
-            Score: sum of ten 0–10 draws. GV: maximum of three 0–1000 draws, intentionally favoring high values. Results
-            are ordered by GV, score, then original list order.
+            Score: sum of ten 0–10 draws. GV: maximum of three 0–1000 draws. Above 950, add a 0–100 draw; repeat while
+            the added draw exceeds 95. Results are ordered by GV, score, then original list order.
         </p>
         }
     </section>

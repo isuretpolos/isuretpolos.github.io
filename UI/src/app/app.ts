@@ -218,7 +218,6 @@ export class App {
         if (this.analyzing() || !this.rates().length) {
             return;
         }
-        this.camera.stop();
         const rates = this.rates().map((rate) => ({ ...rate }));
         const listName = this.name || 'Untitled list';
         this.analyzing.set(true);

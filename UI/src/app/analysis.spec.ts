@@ -17,13 +17,43 @@ describe('Direct hotbit draws', () => {
 
 describe('Two-stage analysis', () => {
     it('makes exactly ten score draws and three GV draws per selected rate', () => {
-        const draw = vi.fn((maximum: number) => maximum);
+        const draw = vi.fn((maximum: number) => (maximum === 100 ? 0 : maximum));
         const result = analyzeRates(rates(2), { integer: draw });
         expect(draw.mock.calls.filter(([maximum]) => maximum === 10).length).toBe(20);
         expect(draw.mock.calls.filter(([maximum]) => maximum === 1000).length).toBe(6);
         expect(result.map((rate) => [rate.energeticScore, rate.gv])).toEqual([
             [100, 1000],
             [100, 1000],
+        ]);
+    });
+
+    it.each([
+        [888, [], 888],
+        [950, [], 950],
+        [951, [0], 951],
+        [969, [70], 1039],
+        [977, [97, 96, 10], 1180],
+        [977, [95], 1072],
+        [977, [100, 95], 1172],
+    ])('extends base GV %i with fresh draws %j to %i', (base, bonuses, expected) => {
+        const words = new Uint32Array([...Array(10).fill(0), base, 0, 0, ...bonuses]);
+        const draws = new HotbitDraws(words);
+        expect(analyzeRates(rates(1), draws)[0].gv).toBe(expected);
+        expect(draws.consumed).toBe(words.length);
+    });
+
+    it('fails without partial results when an extended GV exhausts hotbits', () => {
+        const draws = new HotbitDraws(new Uint32Array([...Array(10).fill(0), 977, 0, 0, 97]));
+        expect(() => analyzeRates(rates(1), draws)).toThrow('Insufficient hotbits');
+        expect(draws.consumed).toBe(14);
+    });
+
+    it('sorts using the extended GV', () => {
+        const words = [...Array(20).fill(0), 969, 0, 0, 0, 951, 0, 0, 95];
+        const result = analyzeRates(rates(2), new HotbitDraws(new Uint32Array(words)));
+        expect(result.map((rate) => [rate.originalIndex, rate.gv])).toEqual([
+            [1, 1046],
+            [0, 969],
         ]);
     });
 
@@ -35,7 +65,7 @@ describe('Two-stage analysis', () => {
     });
 
     it('takes the maximum GV and orders by GV before score', () => {
-        const values = [...Array(10).fill(10), ...Array(10).fill(0), 10, 459, 910, 1000, 0, 0];
+        const values = [...Array(10).fill(10), ...Array(10).fill(0), 10, 459, 910, 1000, 0, 0, 0];
         const result = analyzeRates(rates(2), { integer: () => values.shift()! });
         expect(result.map((rate) => [rate.originalIndex, rate.energeticScore, rate.gv])).toEqual([
             [1, 0, 1000],

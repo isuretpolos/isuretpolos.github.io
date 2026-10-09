@@ -70,3 +70,8 @@ Validation: 24 tests passed across 6 files, production build/root preparation pa
 Cause confirmed: RATES/index.json still referenced _RATES and With_MateriaMedicaUrls filenames after the files were renamed.
 Regenerated the manifest from current files; removed obsolete generated public text copies; bypass the PWA cache when fetching the latest manifest with cached offline fallback. HTTP 404 now identifies a missing/renamed file and refreshes available filenames instead of blaming connectivity. Requests capture the selected filename to avoid selection changes affecting the loaded name.
 Validation: 26 tests passed; production root build passed; all seven manifest entries match nonempty source/public/production rate files. Smartphone confirmation pending. No commits or pushes.
+
+## GV extension and uninterrupted collection
+User-approved rule: if the base maximum-of-three GV is strictly above 950, add a fresh inclusive 0–100 hotbit draw. Continue adding fresh draws while the last bonus is strictly above 95. Stop after adding a bonus of 95 or less. Sort by the extended GV. Base GV 950 does not trigger a bonus; bonus 95 does not repeat. GV may exceed 1000.
+Analysis no longer stops the camera. Existing IndexedDB write transactions serialize collection writes and consumption. The minimum indicator remains a lower bound; bonuses and rejection sampling can require more hotbits. Exhaustion still returns no partial results, and collection remains active.
+Validation: 37 tests passed; production/root build passed. Tests reproduce the examples (888, 1039, 1180), boundaries, bonus 100, exhaustion, extended sorting, and continued camera collection on success and failure. Manual acceptance pending. No commits or pushes.

@@ -1,3 +1,4 @@
+import { HotbitStore } from './hotbit-store';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -63,6 +64,31 @@ describe('Rate workspace', () => {
         fallback.flush(['cached.txt']);
         expect(app.defaults()).toEqual(['cached.txt']);
         http.verify();
+    });
+
+    it.each([false, true])('keeps camera collection active during analysis (failure: %s)', (failure) => {
+        const fixture = TestBed.createComponent(App);
+        const app = fixture.componentInstance;
+        TestBed.inject(HttpTestingController).expectOne('/RATES/index.json').flush([]);
+        app.open('Test', 'Arnica');
+        app.camera.collecting.set(true);
+        const stop = vi.spyOn(app.camera, 'stop');
+        const analyze = vi
+            .spyOn(TestBed.inject(HotbitStore), 'analyze')
+            .mockImplementation(() =>
+                failure
+                    ? Promise.reject(new Error('Insufficient hotbits'))
+                    : Promise.resolve([{ name: 'Arnica', originalIndex: 0, energeticScore: 50, gv: 1039 }]),
+            );
+        app.runAnalysis();
+        expect(stop).not.toHaveBeenCalled();
+        return fixture.whenStable().then(() => {
+            expect(analyze).toHaveBeenCalled();
+            expect(stop).not.toHaveBeenCalled();
+            expect(app.camera.collecting()).toBe(true);
+            stop.mockRestore();
+            analyze.mockRestore();
+        });
     });
 
     it('loads the manifest and keeps predefined lists read-only', () => {
