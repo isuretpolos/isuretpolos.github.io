@@ -85,18 +85,21 @@ export class CameraHotbits {
                                 }
                                 this.rawSamples.set(this.conditioner.raw);
                                 this.usableBits.set(this.conditioner.usable);
+                                const assessment = this.conditioner.assessment();
                                 this.health.set(
-                                    this.conditioner.healthy()
+                                    assessment === 'passed'
                                         ? 'Basic checks passed · entropy unverified'
-                                        : 'Insufficient or biased samples',
+                                        : assessment === 'pending'
+                                          ? 'Gathering samples · assessment pending'
+                                          : 'Sample window rejected · retrying automatically',
                                 );
-                                if (this.conditioner.raw >= 512 && !this.conditioner.healthy()) {
+                                if (assessment === 'failed') {
+                                    // Reject this window, but keep capture running through exposure/lighting transients.
                                     this.words = [];
-                                    this.stop();
-                                    this.status.set(
-                                        'Health check failed. Adjust the camera or lighting, then restart.',
-                                    );
-                                    return;
+                                    this.conditioner = new BitConditioner();
+                                    this.status.set('Collecting · rejected a sample window; gathering fresh samples');
+                                } else {
+                                    this.status.set('Collecting experimental webcam randomness');
                                 }
                                 if (this.words.length >= 10000) {
                                     this.flush();

@@ -41,17 +41,23 @@ export class BitConditioner {
         return undefined;
     }
 
-    healthy(): boolean {
+    assessment(): 'pending' | 'passed' | 'failed' {
+        // Assess complete windows rather than interpreting startup or low yield as failure.
+        if (this.raw < 8192) {
+            return 'pending';
+        }
         const bias = this.ones / this.raw;
+        if (bias <= 0.2 || bias >= 0.8 || this.longestRun >= 32) {
+            return 'failed';
+        }
+        if (this.usable < 128) {
+            return this.raw >= 65536 ? 'failed' : 'pending';
+        }
         const conditionedBias = this.conditionedOnes / this.usable;
-        return (
-            this.raw >= 512 &&
-            this.usable >= 128 &&
-            bias > 0.2 &&
-            bias < 0.8 &&
-            conditionedBias > 0.1 &&
-            conditionedBias < 0.9 &&
-            this.longestRun < 32
-        );
+        return conditionedBias > 0.1 && conditionedBias < 0.9 ? 'passed' : 'failed';
+    }
+
+    healthy(): boolean {
+        return this.assessment() === 'passed';
     }
 }

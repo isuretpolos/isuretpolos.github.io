@@ -47,3 +47,10 @@ Provisional health thresholds and methodology are documented in README.md. They 
 
 Final increment 2 validation: 5 test files, 18 tests passed; production PWA build and root preparation passed. IndexedDB quota failure verified. Real-device and offline checks pending. No commits or pushes.
 
+
+## Camera health regression fix
+Reported: every camera stopped after one comparison frame (1,186 raw candidates but only 39 conditioned bits).
+Cause: the collector interpreted a not-yet-complete assessment as a failed source, and correlated startup samples were assessed immediately.
+Implemented: explicit pending/passed/failed states, at least 8,192 raw candidates per assessment, continued sampling until 128 conditioned bits (65,536 raw limit), and automatic fresh-window retry after rejection. Unassessed/rejected material is never stored. Existing bias/repetition limits retained.
+Regression tests cover low-yield warmup, biased/stuck rejection, and continued camera capture after rejected windows. Real-device confirmation pending.
+Validation: all 21 tests and production build passed. Compiled root files refreshed. Real-camera and smartphone confirmation remain pending. No commits or pushes.

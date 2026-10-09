@@ -59,11 +59,43 @@ describe('Bit conditioning and uint32 packing', () => {
         expect(conditioner.rejected).toBe(2);
     });
 
-    it('fails checks on stuck samples', () => {
+    it('keeps low-yield startup samples pending until the window is complete', () => {
         const conditioner = new BitConditioner();
-        for (let index = 0; index < 600; index++) {
+        for (let index = 0; index < 39; index++) {
+            const bit = index % 2;
+            conditioner.accept(bit);
+            conditioner.accept(1 - bit);
+        }
+        for (let index = 0; index < 554; index++) {
+            const bit = index % 2;
+            conditioner.accept(bit);
+            conditioner.accept(bit);
+        }
+        expect(conditioner.raw).toBe(1186);
+        expect(conditioner.usable).toBe(39);
+        expect(conditioner.assessment()).toBe('pending');
+        for (let index = 0; index < 4096; index++) {
+            const bit = index % 2;
+            conditioner.accept(bit);
+            conditioner.accept(1 - bit);
+        }
+        expect(conditioner.assessment()).toBe('passed');
+    });
+
+    it('rejects severely biased conditioned output after warmup', () => {
+        const conditioner = new BitConditioner();
+        for (let index = 0; index < 4096; index++) {
+            conditioner.accept(0);
             conditioner.accept(1);
         }
-        expect(conditioner.healthy()).toBe(false);
+        expect(conditioner.assessment()).toBe('failed');
+    });
+
+    it('fails checks on stuck samples', () => {
+        const conditioner = new BitConditioner();
+        for (let index = 0; index < 8192; index++) {
+            conditioner.accept(1);
+        }
+        expect(conditioner.assessment()).toBe('failed');
     });
 });

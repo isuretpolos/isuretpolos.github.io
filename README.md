@@ -47,11 +47,10 @@ per rate, selects the top 20 summed scores, then computes each GV as the maximum
 of three inclusive 0–1000 draws.
 
 Collection uses successive sparse red-channel intensity comparisons and Von
-Neumann pairs. Basic checks require at least 512 raw candidate bits and 128
+Neumann pairs. Basic checks require at least 8,192 raw candidate bits and 128
 conditioned bits, raw one fraction between 20% and 80%, conditioned one fraction
 between 10% and 90%, and no raw run of 32 equal bits. These provisional gates are
 not an entropy estimate or TRNG certification. Correlations, lighting, exposure,
-and sensor artifacts remain unassessed on real devices. A failed gate stops
-collection and discards the pending batch. Partial words are never stored.
+and sensor artifacts remain unassessed on real devices. An incomplete assessment keeps collecting. A failed gate discards the pending window and automatically gathers a fresh window without stopping the camera. A window with fewer than 128 conditioned bits is rejected after 65,536 raw candidates. Partial words are never stored.
 Capture stops on page hiding, page exit, permission loss, or component teardown.
 Camera frames are neither displayed nor transmitted. There is no PRNG fallback.
