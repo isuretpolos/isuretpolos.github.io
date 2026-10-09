@@ -32,6 +32,39 @@ describe('Rate workspace', () => {
         expect(progress.max).toBe(13);
     });
 
+    it('refreshes renamed default filenames on a 404 without blaming connectivity', () => {
+        const fixture = TestBed.createComponent(App);
+        const app = fixture.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        const manifest = http.expectOne('/RATES/index.json');
+        expect(manifest.request.headers.get('ngsw-bypass')).toBe('true');
+        manifest.flush(['old.txt']);
+        app.selectedDefault = 'old.txt';
+        app.loadDefault();
+        http.expectOne('/RATES/old.txt').flush('Missing', { status: 404, statusText: 'Not Found' });
+        expect(app.error()).toContain('renamed or is missing');
+        http.expectOne('/RATES/index.json').flush(['new.txt']);
+        expect(app.defaults()).toEqual(['new.txt']);
+        expect(app.selectedDefault).toBe('');
+        app.selectedDefault = 'new.txt';
+        app.loadDefault();
+        http.expectOne('/RATES/new.txt').flush('Arnica');
+        expect(app.rates()[0].name).toBe('Arnica');
+        expect(app.error()).toBe('');
+        http.verify();
+    });
+
+    it('uses the cached manifest when the network is unavailable', () => {
+        const app = TestBed.createComponent(App).componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/RATES/index.json').error(new ProgressEvent('error'));
+        const fallback = http.expectOne('/RATES/index.json');
+        expect(fallback.request.headers.has('ngsw-bypass')).toBe(false);
+        fallback.flush(['cached.txt']);
+        expect(app.defaults()).toEqual(['cached.txt']);
+        http.verify();
+    });
+
     it('loads the manifest and keeps predefined lists read-only', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;

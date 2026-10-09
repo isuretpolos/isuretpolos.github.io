@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { parseRates, Rate, SavedList } from './rate-list';
 import { RateListStore } from './rate-list-store';
 import { HotbitStore } from './hotbit-store';
@@ -60,9 +60,16 @@ export class App {
         } catch (error) {
             this.fail(error);
         }
-        this.http.get<string[]>('/RATES/index.json').subscribe({
+        this.http.get<string[]>('/RATES/index.json', { headers: { 'ngsw-bypass': 'true' } }).subscribe({
             next: (files) => this.defaults.set(files),
-            error: () => this.fail(new Error('Default lists are unavailable. You can still paste or import a list.')),
+            error: () => {
+                // Previously downloaded manifests remain usable when the network is unavailable.
+                this.http.get<string[]>('/RATES/index.json').subscribe({
+                    next: (files) => this.defaults.set(files),
+                    error: () =>
+                        this.fail(new Error('Default lists are unavailable. You can still paste or import a list.')),
+                });
+            },
         });
     }
 
@@ -71,15 +78,34 @@ export class App {
             return;
         }
         this.loading.set(true);
-        this.http.get(`/RATES/${encodeURIComponent(this.selectedDefault)}`, { responseType: 'text' }).subscribe({
+        const filename = this.selectedDefault;
+        this.error.set('');
+        this.http.get(`/RATES/${encodeURIComponent(filename)}`, { responseType: 'text' }).subscribe({
             next: (content) => {
-                this.open(this.selectedDefault.replace(/\.txt$/i, ''), content, undefined, true);
+                this.open(filename.replace(/\.txt$/i, ''), content, undefined, true);
                 this.loading.set(false);
             },
-            error: () => {
+            error: (error: HttpErrorResponse) => {
+                if (error.status === 404) {
+                    this.http.get<string[]>('/RATES/index.json', { headers: { 'ngsw-bypass': 'true' } }).subscribe({
+                        next: (files) => {
+                            this.defaults.set(files);
+                            if (!files.includes(this.selectedDefault)) {
+                                this.selectedDefault = '';
+                            }
+                        },
+                        error: () => {},
+                    });
+                }
                 this.loading.set(false);
                 this.fail(
-                    new Error('Could not load this default list. Its first download needs an internet connection.'),
+                    new Error(
+                        error.status === 404
+                            ? `The default list "${filename}" was renamed or is missing. Refreshing the available lists; please select again.`
+                            : error.status === 0
+                              ? 'Could not reach this default list. Connect to the internet to download it for the first time.'
+                              : `Could not load "${filename}" (HTTP ${error.status}). Please try again.`,
+                    ),
                 );
             },
         });

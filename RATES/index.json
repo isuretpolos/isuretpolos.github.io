@@ -1,8 +1,9 @@
 [
-    "ESSENCES_BACHFLOWERS_RATES.txt",
-    "ESSENCES_BaileyFlowers_RATES.txt",
-    "ESSENCES_BushFlowers_RATES.txt",
-    "ESSENCES_CaliforniaFlowers_RATES.txt",
-    "ESSENCES_GurudasFlowers_RATES.txt",
-    "HOMEOPATHY_Clarke_With_MateriaMedicaUrls.txt"
+    "ESSENCES_BACHFLOWERS.txt",
+    "ESSENCES_BaileyFlowers.txt",
+    "ESSENCES_BushFlowers.txt",
+    "ESSENCES_CaliforniaFlowers.txt",
+    "ESSENCES_GurudasFlowers.txt",
+    "HOMEOPATHY_Clarke.txt",
+    "HOMEOPATHY_JamesTylerKent.txt"
 ]

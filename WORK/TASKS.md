@@ -65,3 +65,8 @@ The reported screenshot contains the obsolete hard-stop message, which is absent
 Implemented: skip strongly directional frame comparisons before conditioning, preserving the current window and all stored hotbits. Keep diagnostic sample/bit counts cumulative across rejected windows. Persist each passed window immediately and begin a fresh independent window, so subsequent movement cannot discard previously validated words. The UI shows a native accessible progress bar against the selected list's minimum and enables analysis on the committed available count without stopping capture.
 Tests cover camera movement, accumulated counts, live saves, and button/progress behavior at the exact minimum. Real-smartphone acceptance pending. No commits or pushes.
 Validation: 24 tests passed across 6 files, production build/root preparation passed. Smartphone movement confirmation remains pending.
+
+## Renamed default rate lists
+Cause confirmed: RATES/index.json still referenced _RATES and With_MateriaMedicaUrls filenames after the files were renamed.
+Regenerated the manifest from current files; removed obsolete generated public text copies; bypass the PWA cache when fetching the latest manifest with cached offline fallback. HTTP 404 now identifies a missing/renamed file and refreshes available filenames instead of blaming connectivity. Requests capture the selected filename to avoid selection changes affecting the loaded name.
+Validation: 26 tests passed; production root build passed; all seven manifest entries match nonempty source/public/production rate files. Smartphone confirmation pending. No commits or pushes.
