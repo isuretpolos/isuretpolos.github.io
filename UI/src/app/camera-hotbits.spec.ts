@@ -6,9 +6,10 @@ describe('Camera failure handling', () => {
         vi.restoreAllMocks();
     });
 
-    it('keeps capture active and discards failed windows instead of stopping the camera', () => {
+    it('skips movement without losing progress and saves accepted windows during capture', () => {
         let callback: () => void = () => {};
         let intensity = 0;
+        let movement = true;
         const stop = vi.fn();
         const sink = vi.fn();
         const video = {
@@ -23,7 +24,15 @@ describe('Camera failure handling', () => {
         const canvas = {
             getContext: () => ({
                 drawImage: vi.fn(),
-                getImageData: () => ({ data: new Uint8ClampedArray(160 * 120 * 4).fill(++intensity) }),
+                getImageData: () => {
+                    intensity++;
+                    const data = new Uint8ClampedArray(160 * 120 * 4);
+                    for (let index = 0; index < data.length; index += 64) {
+                        const positive = (index / 64) % 4 === 1 || (index / 64) % 4 === 2;
+                        data[index] = movement ? intensity : 100 + (intensity % 2 ? (positive ? 1 : -1) : 0);
+                    }
+                    return { data };
+                },
             }),
         };
         vi.spyOn(document, 'createElement').mockImplementation(
@@ -48,19 +57,25 @@ describe('Camera failure handling', () => {
             callback();
             callback();
             expect(camera.collecting()).toBe(true);
-            expect(camera.health()).toContain('pending');
-            for (let index = 0; index < 6; index++) {
+            expect(camera.health()).toContain('skipping');
+            expect(camera.rawSamples()).toBe(0);
+            movement = false;
+            for (let index = 0; index < 10; index++) {
                 callback();
             }
-            expect(camera.health()).toContain('rejected');
-            expect(camera.collecting()).toBe(true);
-            expect(stop).not.toHaveBeenCalled();
-            expect(sink).not.toHaveBeenCalled();
+            expect(sink).toHaveBeenCalled();
+            const stored = sink.mock.calls.reduce((count, [words]) => count + words.length, 0);
+            const raw = camera.rawSamples();
+            movement = true;
             callback();
-            expect(camera.health()).toContain('pending');
+            callback();
+            expect(camera.collecting()).toBe(true);
+            expect(camera.rawSamples()).toBeGreaterThanOrEqual(raw);
+            expect(sink.mock.calls.reduce((count, [words]) => count + words.length, 0)).toBeGreaterThanOrEqual(stored);
+            expect(stop).not.toHaveBeenCalled();
             camera.stop();
             expect(stop).toHaveBeenCalledOnce();
-            expect(sink).not.toHaveBeenCalled();
+            expect(sink).toHaveBeenCalled();
         });
     });
 

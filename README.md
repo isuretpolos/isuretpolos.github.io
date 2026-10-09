@@ -39,8 +39,7 @@ in production builds only. No imported list is sent to a server.
 
 
 To analyze: load a list, start camera collection, allow camera permission, then
-stop collection to save a partial batch (full batches save at about 10,000
-integers). The analysis button enables once the available count reaches the
+watch the available count increase as validated windows save automatically. The analysis button enables once the available count reaches the
 minimum draw count. Rejection sampling can require additional integers. Failed
 attempts also retire consumed material. Analysis uses ten inclusive 0–10 draws
 per rate, selects the top 20 summed scores, then computes each GV as the maximum
@@ -59,3 +58,11 @@ Camera startup skips the first 15 delivered frames, then waits for a differing
 pair at the sampled pixels. That first differing pair is discarded as readiness
 confirmation; extraction and health tests start on the following pair. This
 startup gate does not establish sensor entropy or exposure stability.
+
+Validated collection windows now save immediately during capture. Strongly
+one-directional frame comparisons (20% or less, or 80% or more brightening)
+are skipped without resetting the pending window. Diagnostic counters remain
+cumulative during a session. The minimum-count progress bar uses committed
+IndexedDB integers; analysis enables immediately when that minimum is available.
+Rejection sampling can still require additional integers. These movement filters
+and health gates remain experimental, not an entropy certification.

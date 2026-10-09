@@ -15,8 +15,8 @@
     <section class="analysis-panel" aria-labelledby="analysis-title">
         <h2 id="analysis-title">Analyze your loaded list</h2>
         <p>
-            1. Start collection and allow camera access. 2. Stop collection to save a partial batch. 3. Analyze when
-            enough hotbits are available.
+            1. Start collection and allow camera access. 2. Watch the progress below. 3. Analyze as soon as the minimum
+            is reached.
         </p>
         <p>
             No camera images or raw random values are displayed or uploaded. Collection stops when this page is hidden.
@@ -34,10 +34,12 @@
             </button>
             <button class="secondary" (click)="requestPersistence()">Request persistent storage</button>
         </div>
+        <label for="hotbit-progress">Hotbits for analysis: {{ available() }} / {{ required() }} integers</label>
+        <progress id="hotbit-progress" [value]="available()" [max]="required() || 1"></progress>
         <p role="status">{{ camera.status() }} · Available: {{ available() }} integers · Consumed: {{ consumed() }}</p>
         <p>
-            Minimum for this list: {{ required() }} integers. Rejection sampling may need additional hotbits. Batches
-            save at approximately 10,000 integers or when collection stops.
+            Minimum for this list: {{ required() }} integers. Rejection sampling may need additional hotbits. Validated
+            sample windows save automatically during collection.
         </p>
         <p class="hint">
             {{ camera.health() }} · Candidate samples: {{ camera.rawSamples() }} · Conditioned bits: {{

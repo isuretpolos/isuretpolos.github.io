@@ -119,3 +119,8 @@ td {
     padding: 12px;
     border-bottom: 1px solid #d8e1d9;
 }
+progress {
+    width: 100%;
+    height: 24px;
+    accent-color: #245b51;
+}

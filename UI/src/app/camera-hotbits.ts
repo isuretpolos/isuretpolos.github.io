@@ -81,6 +81,25 @@ export class CameraHotbits {
                                 return;
                             }
                             if (this.previous) {
+                                let brighter = 0;
+                                let darker = 0;
+                                for (let index = 0; index < pixels.length; index += 64) {
+                                    const difference = pixels[index] - this.previous[index];
+                                    brighter += difference > 0 ? 1 : 0;
+                                    darker += difference < 0 ? 1 : 0;
+                                }
+                                const changed = brighter + darker;
+                                const fraction = changed ? brighter / changed : 0.5;
+                                if (changed && (fraction <= 0.2 || fraction >= 0.8)) {
+                                    // Coherent scene/exposure changes are excluded without discarding prior samples.
+                                    this.previous = pixels;
+                                    this.health.set('Scene or exposure change · skipping this frame pair');
+                                    this.status.set('Collecting · keeping progress through camera movement');
+                                    this.frameId = this.video.requestVideoFrameCallback(frame);
+                                    return;
+                                }
+                                const rawBefore = this.conditioner.raw;
+                                const usableBefore = this.conditioner.usable;
                                 // Sparse red-channel samples reduce adjacent-pixel dependence, without proving independence.
                                 for (let index = 0; index < pixels.length; index += 64) {
                                     const difference = pixels[index] - this.previous[index];
@@ -93,8 +112,8 @@ export class CameraHotbits {
                                         this.words.push(word);
                                     }
                                 }
-                                this.rawSamples.set(this.conditioner.raw);
-                                this.usableBits.set(this.conditioner.usable);
+                                this.rawSamples.update((count) => count + this.conditioner.raw - rawBefore);
+                                this.usableBits.update((count) => count + this.conditioner.usable - usableBefore);
                                 const assessment = this.conditioner.assessment();
                                 this.health.set(
                                     assessment === 'passed'
@@ -111,8 +130,9 @@ export class CameraHotbits {
                                 } else {
                                     this.status.set('Collecting experimental webcam randomness');
                                 }
-                                if (this.words.length >= 10000) {
+                                if (assessment === 'passed') {
                                     this.flush();
+                                    this.conditioner = new BitConditioner();
                                 }
                             }
                             this.previous = pixels;

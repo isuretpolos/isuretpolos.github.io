@@ -60,3 +60,8 @@ User requested skipping initial frames and waiting for frame A/B differences bef
 Implemented: discard the first 15 delivered frames; establish a new baseline; wait for a difference at sampled pixels; discard that readiness pair; start extraction and health sampling on the next pair. Each capture session creates a new gate. Unchanged startup frames do not affect health counters.
 Validation: 23 tests across 6 files passed, including constant startup frames and collector counter checks; production root build passed. Real-camera verification remains pending.
 The reported screenshot contains the obsolete hard-stop message, which is absent from the current source. The browser or served deployment may still use an older build. No commits or pushes performed.
+
+## Smartphone movement and live progress
+Implemented: skip strongly directional frame comparisons before conditioning, preserving the current window and all stored hotbits. Keep diagnostic sample/bit counts cumulative across rejected windows. Persist each passed window immediately and begin a fresh independent window, so subsequent movement cannot discard previously validated words. The UI shows a native accessible progress bar against the selected list's minimum and enables analysis on the committed available count without stopping capture.
+Tests cover camera movement, accumulated counts, live saves, and button/progress behavior at the exact minimum. Real-smartphone acceptance pending. No commits or pushes.
+Validation: 24 tests passed across 6 files, production build/root preparation passed. Smartphone movement confirmation remains pending.
