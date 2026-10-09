@@ -39,6 +39,12 @@ describe('Camera failure handling', () => {
         });
         const camera = new CameraHotbits();
         return camera.start(sink).then(() => {
+            for (let index = 0; index < 16; index++) {
+                callback();
+            }
+            expect(camera.rawSamples()).toBe(0);
+            expect(camera.usableBits()).toBe(0);
+            expect(camera.status()).toContain('Waiting for differences');
             callback();
             callback();
             expect(camera.collecting()).toBe(true);

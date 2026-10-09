@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { BitConditioner } from './bit-conditioner';
+import { FrameReadiness } from './frame-readiness';
 
 @Injectable({ providedIn: 'root' })
 export class CameraHotbits {
@@ -63,6 +64,9 @@ export class CameraHotbits {
                     if (!context || !this.video?.requestVideoFrameCallback) {
                         throw new Error('This browser does not support frame-based camera collection.');
                     }
+                    const readiness = new FrameReadiness();
+                    this.status.set(readiness.status);
+                    this.health.set('Waiting for frame differences · tests not started');
                     const frame = () => {
                         if (!this.collecting() || generation !== this.generation || !this.video) {
                             return;
@@ -70,6 +74,12 @@ export class CameraHotbits {
                         try {
                             context.drawImage(this.video, 0, 0, 160, 120);
                             const pixels = context.getImageData(0, 0, 160, 120).data;
+                            if (!readiness.accept(pixels)) {
+                                this.previous = pixels;
+                                this.status.set(readiness.status);
+                                this.frameId = this.video.requestVideoFrameCallback(frame);
+                                return;
+                            }
                             if (this.previous) {
                                 // Sparse red-channel samples reduce adjacent-pixel dependence, without proving independence.
                                 for (let index = 0; index < pixels.length; index += 64) {

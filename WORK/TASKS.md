@@ -54,3 +54,9 @@ Cause: the collector interpreted a not-yet-complete assessment as a failed sourc
 Implemented: explicit pending/passed/failed states, at least 8,192 raw candidates per assessment, continued sampling until 128 conditioned bits (65,536 raw limit), and automatic fresh-window retry after rejection. Unassessed/rejected material is never stored. Existing bias/repetition limits retained.
 Regression tests cover low-yield warmup, biased/stuck rejection, and continued camera capture after rejected windows. Real-device confirmation pending.
 Validation: all 21 tests and production build passed. Compiled root files refreshed. Real-camera and smartphone confirmation remain pending. No commits or pushes.
+
+## Explicit camera startup gating
+User requested skipping initial frames and waiting for frame A/B differences before bias testing.
+Implemented: discard the first 15 delivered frames; establish a new baseline; wait for a difference at sampled pixels; discard that readiness pair; start extraction and health sampling on the next pair. Each capture session creates a new gate. Unchanged startup frames do not affect health counters.
+Validation: 23 tests across 6 files passed, including constant startup frames and collector counter checks; production root build passed. Real-camera verification remains pending.
+The reported screenshot contains the obsolete hard-stop message, which is absent from the current source. The browser or served deployment may still use an older build. No commits or pushes performed.

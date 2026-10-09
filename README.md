@@ -54,3 +54,8 @@ not an entropy estimate or TRNG certification. Correlations, lighting, exposure,
 and sensor artifacts remain unassessed on real devices. An incomplete assessment keeps collecting. A failed gate discards the pending window and automatically gathers a fresh window without stopping the camera. A window with fewer than 128 conditioned bits is rejected after 65,536 raw candidates. Partial words are never stored.
 Capture stops on page hiding, page exit, permission loss, or component teardown.
 Camera frames are neither displayed nor transmitted. There is no PRNG fallback.
+
+Camera startup skips the first 15 delivered frames, then waits for a differing
+pair at the sampled pixels. That first differing pair is discarded as readiness
+confirmation; extraction and health tests start on the following pair. This
+startup gate does not establish sensor entropy or exposure stability.
