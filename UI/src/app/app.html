@@ -1,0 +1,82 @@
+<main>
+    <header>
+        <p class="eyebrow">ISURET POLOS · LOCAL RESEARCH</p>
+        <h1>Radionics workspace</h1>
+        <p>Prepare your rate lists. Your imported lists stay in this browser.</p>
+    </header>
+    <aside class="notice">
+        Research tool · Random scores do not establish physical energy or clinical properties. Camera collection and
+        analysis are planned for the next increments.
+    </aside>
+    @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+    }
+    <p role="status">{{ message() }}</p>
+    <div class="workspace">
+        <section aria-labelledby="library-title">
+            <h2 id="library-title">Rate library</h2>
+            <label for="default-list">Predefined list</label>
+            <select id="default-list" [(ngModel)]="selectedDefault">
+                <option value="">Choose a list</option>
+                @for (file of defaults(); track file) {
+                <option [value]="file">{{ file.replace('.txt', '') }}</option>
+                }
+            </select>
+            <button (click)="loadDefault()" [disabled]="!selectedDefault || loading()">
+                {{ loading() ? 'Loading…' : 'Load default' }}
+            </button>
+            <h3>Your local lists</h3>
+            @for (list of saved(); track list.id) {
+            <div class="saved-list">
+                <button class="secondary" (click)="open(list.name, list.content, list.id)">{{ list.name }}</button>
+                <button class="secondary" (click)="remove(list)" [attr.aria-label]="'Delete ' + list.name">
+                    Delete
+                </button>
+            </div>
+            } @empty {
+            <p>No saved lists yet.</p>
+            }
+            <button class="secondary" (click)="newList()">New pasted list</button>
+            <label for="import-file">Import UTF-8 text file</label>
+            <input id="import-file" type="file" accept=".txt,text/plain" (change)="importFile($event)" />
+            <p class="hint">Clearing site data or uninstalling may erase local lists. Export backups to keep them.</p>
+        </section>
+        <section aria-labelledby="editor-title">
+            <h2 id="editor-title">{{ readOnly ? 'Default list (read-only)' : 'List editor' }}</h2>
+            <label for="list-name">List name</label>
+            <input id="list-name" [(ngModel)]="name" [readOnly]="readOnly" />
+            <label for="list-content">Rates · one per line, optional URL after a tab</label>
+            <textarea
+                id="list-content"
+                [(ngModel)]="content"
+                [readOnly]="readOnly"
+                (ngModelChange)="preview()"
+                rows="12"
+            ></textarea>
+            <div class="actions">
+                @if (readOnly) {
+                <button (click)="makeCopy()">Create editable copy</button>
+                } @else {
+                <button (click)="save()" [disabled]="!storageReady() || !name.trim() || !rates().length">
+                    {{ editingId ? 'Save changes / rename' : 'Save locally' }}
+                </button>
+                }
+                <button class="secondary" (click)="exportList()" [disabled]="!rates().length">Export .txt</button>
+            </div>
+            <h3>Preview · {{ rates().length }} rates</h3>
+            <ol class="preview">
+                @for (rate of rates(); track rate.originalIndex) {
+                <li>
+                    @if (rate.url) {
+                    <a [href]="rate.url" target="_blank" rel="noopener noreferrer">{{ rate.name }}</a>
+                    } @else { {{ rate.name }} }
+                </li>
+                }
+            </ol>
+        </section>
+    </div>
+    <footer>
+        All processing is local. Default lists download from this website; imported content is never uploaded. This
+        increment does not collect or display hotbits.
+    </footer>
+</main>
