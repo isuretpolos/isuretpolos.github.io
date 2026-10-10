@@ -206,11 +206,56 @@
             <button class="secondary full" (click)="expandedResults.set(!expandedResults())">
                 {{ expandedResults() ? 'Show top 3' : 'Show all ' + results().length + ' results' }}
             </button>
+            } @if (currentHistory(); as entry) {
+            <label [for]="'result-note-' + entry.id">Analysis note</label>
+            <textarea
+                [id]="'result-note-' + entry.id"
+                rows="2"
+                [ngModel]="entry.note"
+                (ngModelChange)="history.updateNote(entry.id, $event)"
+            ></textarea>
+            <div class="actions">
+                <button class="secondary" (click)="exportAnalysis(entry)">Export CSV</button>
+                <button class="secondary" (click)="exportAnalysis(entry, true)">Export for AI</button>
+            </div>
+            <p class="hint">
+                AI export downloads an interpretation request with the same CSV. Share it with an AI of your choice.
+            </p>
             } } @else {
             <p class="empty-state">Select → Collect → Analyze</p>
             }
         </section>
     </div>
+    <details class="history-panel">
+        <summary>Analysis history · {{ history.entries().length }}/10</summary>
+        <div class="panel-content">
+            <p>The last 10 rate analyses and notes are saved on this device, newest first.</p>
+            @if (history.error()) {
+            <p class="error" role="alert">{{ history.error() }}</p>
+            } @for (entry of history.entries(); track entry.id) {
+            <article class="history-entry">
+                <h3>{{ entry.listName }}</h3>
+                <time [attr.datetime]="entry.date">{{ historyDate(entry.date) }}</time>
+                <label [for]="'history-note-' + entry.id">Note</label>
+                <textarea
+                    [id]="'history-note-' + entry.id"
+                    rows="2"
+                    [ngModel]="entry.note"
+                    (ngModelChange)="history.updateNote(entry.id, $event)"
+                ></textarea>
+                <div class="actions">
+                    <button class="secondary" [disabled]="analyzing()" (click)="showHistory(entry)">
+                        View results
+                    </button>
+                    <button class="secondary" (click)="exportAnalysis(entry)">Export CSV</button>
+                    <button class="secondary" (click)="exportAnalysis(entry, true)">Export for AI</button>
+                </div>
+            </article>
+            } @empty {
+            <p>No saved analyses yet.</p>
+            }
+        </div>
+    </details>
     @if (mode() === 'simple') {
     <button class="advanced-entry secondary full" (click)="setMode('advanced')">
         <app-icon name="settings" /><span

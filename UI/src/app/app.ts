@@ -11,6 +11,7 @@ import { PwaUpdates } from './pwa-updates';
 import { PhotoAnalysis } from './photo-analysis';
 import { LiveAnalysis } from './live-analysis';
 import { Fullscreen } from './fullscreen';
+import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './analysis-history';
 
 @Component({
     selector: 'app-root',
@@ -19,6 +20,8 @@ import { Fullscreen } from './fullscreen';
     styleUrl: './app.css',
 })
 export class App {
+    readonly history = inject(AnalysisHistory);
+    readonly currentHistoryId = signal('');
     private readonly http = inject(HttpClient);
     private readonly store = inject(RateListStore);
     readonly updates = inject(PwaUpdates);
@@ -324,6 +327,7 @@ export class App {
         this.writes
             .then(() => this.hotbits.analyze(rates))
             .then((results) => {
+                this.currentHistoryId.set(this.history.add(listName, results).id);
                 this.results.set(results);
                 this.resultListName.set(listName);
                 this.expandedResults.set(false);
@@ -362,6 +366,39 @@ export class App {
             })
             .catch((error) => this.fail(error))
             .finally(() => this.updateApplying.set(false));
+    }
+
+    showHistory(entry: HistoryEntry): void {
+        if (this.analyzing()) {
+            return;
+        }
+        this.results.set(entry.results.map((result) => ({ ...result })));
+        this.resultListName.set(entry.listName);
+        this.currentHistoryId.set(entry.id);
+        this.expandedResults.set(false);
+        document.getElementById('results-card')?.scrollIntoView?.({ block: 'nearest' });
+    }
+
+    exportAnalysis(entry: HistoryEntry, forAi = false): void {
+        const text = forAi ? analysisAiText(entry) : analysisCsv(entry);
+        const url = URL.createObjectURL(
+            new Blob([text], {
+                type: forAi ? 'text/plain;charset=utf-8' : 'text/csv;charset=utf-8',
+            }),
+        );
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `analysis-${entry.date.replace(/[:.]/g, '-')}${forAi ? '-ai.txt' : '.csv'}`;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    currentHistory(): HistoryEntry | undefined {
+        return this.history.entries().find((entry) => entry.id === this.currentHistoryId());
+    }
+
+    historyDate(date: string): string {
+        return new Date(date).toLocaleString();
     }
 
     requestPersistence(): void {
