@@ -1,5 +1,6 @@
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { BroadcastWakeLock } from './broadcast-wake-lock';
+import { Disclaimer } from './disclaimer';
 import { BroadcastPanel } from './broadcast-panel';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -19,7 +20,7 @@ import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './an
 @Component({
     selector: 'app-root',
     providers: [BroadcastWakeLock],
-    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel],
+    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel, Disclaimer],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
