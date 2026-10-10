@@ -32,6 +32,7 @@ export class BroadcastPanel {
     readonly duration = signal(0);
     readonly cycles = signal(1);
     readonly lastGv = signal<number | null>(null);
+    readonly randomFallback = signal(false);
     seconds = 60;
     multiplier = 1;
     delta = true;
@@ -115,6 +116,7 @@ export class BroadcastPanel {
         this.duration.set(0);
         this.cycles.set(1);
         this.lastGv.set(null);
+        this.randomFallback.set(false);
         this.wave = 0;
         this.fullscreenMessage.set('');
         const canvas = this.canvas()?.nativeElement;
@@ -196,6 +198,7 @@ export class BroadcastPanel {
         this.elapsed.set(0);
         this.cycles.set(1);
         this.lastGv.set(null);
+        this.randomFallback.set(false);
         this.started = performance.now();
         this.running.set(true);
         this.busyChange.emit(true);
@@ -226,7 +229,11 @@ export class BroadcastPanel {
             return;
         }
         const sample = this.resonanceEnabled
-            ? this.hotbits.broadcastResonance(this.session().length, this.sessionMultiplier)
+            ? this.hotbits.broadcastResonance(this.session().length, this.sessionMultiplier, () => {
+                  if (token === this.generation) {
+                      this.randomFallback.set(true);
+                  }
+              })
             : Promise.resolve(this.session().map(() => false));
         sample
             .then((hits) => {
@@ -264,7 +271,11 @@ export class BroadcastPanel {
         }
         this.status.set('Checking target GV…');
         this.hotbits
-            .targetMeasurement()
+            .targetMeasurement(() => {
+                if (token === this.generation) {
+                    this.randomFallback.set(true);
+                }
+            })
             .then((gv) => {
                 if (token !== this.generation) {
                     return;

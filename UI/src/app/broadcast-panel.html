@@ -74,7 +74,7 @@
                 <label class="setting"
                     ><input type="checkbox" [(ngModel)]="resonance" /><span
                         ><strong>Resonance detection</strong
-                        ><small>Check each rate using fresh stored hotbits.</small></span
+                        ><small>Use stored hotbits, then unseeded random when they run out.</small></span
                     ></label
                 >
                 <label class="setting"
@@ -117,7 +117,9 @@
             (!immersive() && running()) { <button class="glass-button" (click)="openStage()">Fullscreen</button> }
         </div>
         <div class="stage-bottom">
-            @if (session().length) {
+            @if (randomFallback()) {
+            <p class="fullscreen-note">Hotbits depleted · unseeded random used for this session</p>
+            } @if (session().length) {
             <p class="signature-line">
                 {{ session()[0].name }}@if (session().length > 1) { <span> + {{ session().length - 1 }} rates</span> }
             </p>

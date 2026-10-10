@@ -1,4 +1,4 @@
 {
-    "version": "1.11.0",
-    "description": "Add broadcast Clear button with four-second purple app flash"
+    "version": "1.11.1",
+    "description": "Continue broadcasting with unseeded random when hotbits run out"
 }

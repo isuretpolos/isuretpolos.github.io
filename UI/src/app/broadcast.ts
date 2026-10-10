@@ -1,4 +1,20 @@
-import { AnalysisResult } from './analysis';
+import { AnalysisResult, HotbitsExhausted } from './analysis';
+
+export function broadcastingDraws(draws: { integer: (maximum: number) => number }, onFallback: () => void) {
+    return {
+        integer: (maximum: number): number => {
+            try {
+                return draws.integer(maximum);
+            } catch (error) {
+                if (!(error instanceof HotbitsExhausted)) {
+                    throw error;
+                }
+                onFallback();
+                return Math.floor(Math.random() * (maximum + 1));
+            }
+        },
+    };
+}
 
 export interface BroadcastRate extends AnalysisResult {
     resonances: number;

@@ -9,6 +9,37 @@ const rates = [
 ];
 
 describe('Canvas broadcaster', () => {
+    it('continues and completes the duration when resonance checks use fallback randomness', () => {
+        const hotbits = {
+            broadcastResonance: (_count: number, _multiplier: number, fallback: () => void) => {
+                fallback();
+                return Promise.resolve([true]);
+            },
+        };
+        TestBed.configureTestingModule({ providers: [{ provide: HotbitStore, useValue: hotbits }] });
+        const fixture = TestBed.createComponent(BroadcastPanel);
+        fixture.componentRef.setInput('results', rates);
+        fixture.componentRef.setInput('targetGv', 500);
+        fixture.detectChanges();
+        const panel = fixture.componentInstance;
+        vi.spyOn(panel as any, 'draw').mockImplementation(() => {});
+        panel.toggle(0);
+        panel.start();
+        return Promise.resolve().then(() => {
+            expect(panel.running()).toBe(true);
+            expect(panel.randomFallback()).toBe(true);
+            expect(panel.total()).toBe(1);
+            const state = panel as any;
+            state.started = performance.now() - 61000;
+            state.tick(state.generation);
+            expect(panel.running()).toBe(false);
+            expect(panel.remaining()).toBe(0);
+            expect(panel.status()).toBe('Broadcast complete.');
+            expect(panel.total()).toBe(1);
+            fixture.destroy();
+        });
+    });
+
     it('broadcasts a typed custom signature without analysis and opens the fullscreen stage', () => {
         const fixture = TestBed.createComponent(BroadcastPanel);
         fixture.componentRef.setInput('targetGv', 500);

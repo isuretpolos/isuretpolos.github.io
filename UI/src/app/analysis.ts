@@ -6,6 +6,12 @@ export interface AnalysisResult extends Rate {
     gv: number;
 }
 
+export class HotbitsExhausted extends Error {
+    constructor() {
+        super('Insufficient hotbits. Collect more and retry. No results were produced.');
+    }
+}
+
 export class HotbitDraws {
     private cursor = 0;
     constructor(private readonly words: Uint32Array) {}
@@ -26,7 +32,7 @@ export class HotbitDraws {
                 return value % range;
             }
         }
-        throw new Error('Insufficient hotbits. Collect more and retry. No results were produced.');
+        throw new HotbitsExhausted();
     }
 }
 

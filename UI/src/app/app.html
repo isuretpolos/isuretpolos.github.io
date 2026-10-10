@@ -485,7 +485,8 @@
                 <p>
                     Duplicate names remain independent rows in original order. Every draw consumes fresh conditioned
                     hotbits using rejection sampling. Failed attempts retire consumed material and return no partial
-                    results. There is no PRNG fallback. Raw bits and integers are never displayed.
+                    results. Analysis requires stored hotbits. During broadcasting, resonance and GV rechecks use
+                    unseeded random when hotbits run out. Raw bits and integers are never displayed.
                 </p>
                 <p>
                     Camera access requires HTTPS or localhost. If access is denied, enable camera permission in browser

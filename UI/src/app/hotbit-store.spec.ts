@@ -5,6 +5,35 @@ describe('IndexedDB hotbit transactions', () => {
     beforeEach(() => vi.stubGlobal('indexedDB', new IDBFactory()));
     afterEach(() => vi.unstubAllGlobals());
 
+    it('uses remaining hotbits and falls back for subsequent resonance draws', () => {
+        const store = new HotbitStore();
+        const fallback = vi.fn();
+        const random = vi.spyOn(Math, 'random').mockReturnValue(0.99999);
+        return store
+            .append(new Uint32Array([0]))
+            .then(() => store.broadcastResonance(3, 1, fallback))
+            .then((hits) => {
+                expect(hits).toEqual([false, true, true]);
+                expect(fallback).toHaveBeenCalledTimes(2);
+                return store.counts();
+            })
+            .then((counts) => expect(counts).toEqual({ available: 0, consumed: 1 }))
+            .finally(() => random.mockRestore());
+    });
+
+    it('allows broadcast GV rechecks with empty hotbits while regular target checks still require them', () => {
+        const store = new HotbitStore();
+        const fallback = vi.fn();
+        const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+        return store
+            .targetMeasurement(fallback)
+            .then((gv) => {
+                expect(gv).toBe(0);
+                expect(fallback).toHaveBeenCalledTimes(3);
+                return expect(store.targetMeasurement()).rejects.toThrow('Insufficient hotbits');
+            })
+            .finally(() => random.mockRestore());
+    });
     it('persists binary batches and retires consumed words across service instances', () => {
         const store = new HotbitStore();
         return store
