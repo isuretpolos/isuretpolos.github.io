@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1791611781268,
+  "timestamp": 1791612972587,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -13,7 +13,7 @@
       "urls": [
         "/favicon.ico",
         "/index.html",
-        "/main-PGTI2LS6.js",
+        "/main-AUOYOIHE.js",
         "/manifest.webmanifest",
         "/styles-CI4COQKM.css",
         "/version.json"
@@ -82,11 +82,11 @@
     "/icons/icon-maskable-192.png": "50d05603c7304d6dd080c30bf1d5d32d4f9bb797",
     "/icons/icon-maskable-512.png": "db1d3de5f0d6cf4c3836b871de730b293dac8491",
     "/icons/radionics-source.png": "80a88862eef0771cfd9df735db225df4f8bd0929",
-    "/index.html": "ee5a956dcc4b16578c9b8e6c33119ac8bde7db9c",
-    "/main-PGTI2LS6.js": "8c29b632100595a2bb79fe60d097e6db55affcf1",
+    "/index.html": "7aa81cc39bdb9aa16ef7a5a150e5d0147c1c8941",
+    "/main-AUOYOIHE.js": "fc7b33bedb71a85fb57a432bbbd97db023309844",
     "/manifest.webmanifest": "6ae0a9bbb94b48dc1cac3a34de1af00708f20564",
     "/styles-CI4COQKM.css": "c8781b0454f4279e00aeadae3a4988e0a5f3b275",
-    "/version.json": "733347a827606b821f17018ea101c33ae7659d6a"
+    "/version.json": "3586e32388e4596c108decd7eb481b9f028d5dc7"
   },
   "navigationUrls": [
     {

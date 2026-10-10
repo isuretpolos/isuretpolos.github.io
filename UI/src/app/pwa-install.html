@@ -1,0 +1,21 @@
+@if (!installed()) {
+<button class="install-button" (click)="open()">Install app</button>
+<dialog #installDialog aria-labelledby="install-title">
+    <h2 id="install-title">Install Radionics</h2>
+    <p>Add Radionics to your device and open it in its own app window.</p>
+    @if (canInstall()) {
+    <button class="install-button" (click)="install()" [disabled]="busy()">
+        {{ busy() ? 'Installing…' : 'Install app' }}
+    </button>
+    } @else {
+    <p>On iPhone or iPad, open this page in Safari, choose Share, then Add to Home Screen.</p>
+    <p>
+        On other devices, look for Install app or Add to Home Screen in your browser menu or address bar. If it is
+        unavailable, try a supported browser or open the app if you already installed it.
+    </p>
+    } @if (error()) {
+    <p role="alert">{{ error() }}</p>
+    }
+    <button class="install-button" (click)="close()">Continue in browser</button>
+</dialog>
+}

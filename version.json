@@ -1,4 +1,4 @@
 {
-    "version": "1.6.2",
-    "description": "Clean residual root CSS bundles before rebuilding Angular"
+    "version": "1.7.0",
+    "description": "First-visit PWA install offer and browser install button"
 }

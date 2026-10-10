@@ -488,6 +488,7 @@
         (countsChanged)="refreshHotbits()"
     />
     <footer>
+        <app-pwa-install />
         <p>Local research · Experimental randomness</p>
         @if (appVersion(); as version) {
         <p>Version {{ version.version }} · {{ version.description }}</p>

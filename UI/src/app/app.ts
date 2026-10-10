@@ -8,6 +8,7 @@ import { CameraHotbits } from './camera-hotbits';
 import { AnalysisResult } from './analysis';
 import { Icon } from './icon';
 import { PwaUpdates } from './pwa-updates';
+import { PwaInstall } from './pwa-install';
 import { PhotoAnalysis } from './photo-analysis';
 import { LiveAnalysis } from './live-analysis';
 import { Fullscreen } from './fullscreen';
@@ -15,7 +16,7 @@ import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './an
 
 @Component({
     selector: 'app-root',
-    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis],
+    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
