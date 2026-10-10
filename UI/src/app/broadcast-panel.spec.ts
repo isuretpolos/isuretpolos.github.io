@@ -9,6 +9,56 @@ const rates = [
 ];
 
 describe('Canvas broadcaster', () => {
+    it('completes multiple fallback frames despite storage and rendering failures', () => {
+        const hotbits = {
+            broadcastResonance: vi.fn((_count: number, _multiplier: number, fallback: () => void) => {
+                fallback();
+                return Promise.reject(new Error('Storage unavailable'));
+            }),
+        };
+        TestBed.configureTestingModule({ providers: [{ provide: HotbitStore, useValue: hotbits }] });
+        const fixture = TestBed.createComponent(BroadcastPanel);
+        fixture.componentRef.setInput('results', rates);
+        fixture.componentRef.setInput('targetGv', 500);
+        fixture.detectChanges();
+        const panel = fixture.componentInstance;
+        const draw = vi.spyOn(panel as any, 'draw').mockImplementation(() => {
+            throw new Error('Canvas resized');
+        });
+        vi.useFakeTimers();
+        panel.seconds = 1;
+        panel.toggle(0);
+        panel.start();
+        return vi
+            .advanceTimersByTimeAsync(1200)
+            .then(() => {
+                expect(hotbits.broadcastResonance).toHaveBeenCalledTimes(1);
+                expect(draw.mock.calls.length).toBeGreaterThan(10);
+                expect(panel.randomFallback()).toBe(true);
+                expect(panel.remaining()).toBe(0);
+                expect(panel.status()).toBe('Broadcast complete.');
+            })
+            .finally(() => {
+                fixture.destroy();
+                vi.useRealTimers();
+            });
+    });
+
+    it('does not end a running broadcast when the page becomes temporarily hidden', () => {
+        const fixture = TestBed.createComponent(BroadcastPanel);
+        fixture.componentRef.setInput('targetGv', 500);
+        fixture.detectChanges();
+        const panel = fixture.componentInstance;
+        vi.spyOn(panel as any, 'tick').mockImplementation(() => {});
+        panel.customRate = 'Test';
+        panel.startCustom();
+        const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+        document.dispatchEvent(new Event('visibilitychange'));
+        expect(panel.running()).toBe(true);
+        hidden.mockRestore();
+        fixture.destroy();
+    });
+
     it('continues and completes the duration when resonance checks use fallback randomness', () => {
         const hotbits = {
             broadcastResonance: (_count: number, _multiplier: number, fallback: () => void) => {
@@ -25,19 +75,21 @@ describe('Canvas broadcaster', () => {
         vi.spyOn(panel as any, 'draw').mockImplementation(() => {});
         panel.toggle(0);
         panel.start();
-        return Promise.resolve().then(() => {
-            expect(panel.running()).toBe(true);
-            expect(panel.randomFallback()).toBe(true);
-            expect(panel.total()).toBe(1);
-            const state = panel as any;
-            state.started = performance.now() - 61000;
-            state.tick(state.generation);
-            expect(panel.running()).toBe(false);
-            expect(panel.remaining()).toBe(0);
-            expect(panel.status()).toBe('Broadcast complete.');
-            expect(panel.total()).toBe(1);
-            fixture.destroy();
-        });
+        return Promise.resolve()
+            .then(() => {})
+            .then(() => {
+                expect(panel.running()).toBe(true);
+                expect(panel.randomFallback()).toBe(true);
+                expect(panel.total()).toBe(1);
+                const state = panel as any;
+                state.started = performance.now() - 61000;
+                state.tick(state.generation);
+                expect(panel.running()).toBe(false);
+                expect(panel.remaining()).toBe(0);
+                expect(panel.status()).toBe('Broadcast complete.');
+                expect(panel.total()).toBe(1);
+                fixture.destroy();
+            });
     });
 
     it('broadcasts a typed custom signature without analysis and opens the fullscreen stage', () => {
@@ -85,13 +137,14 @@ describe('Canvas broadcaster', () => {
         const tick = vi.spyOn(state, 'tick').mockImplementation(() => {});
         state.finishCycle(0);
         return Promise.resolve()
+            .then(() => {})
             .then(() => {
                 expect(panel.duration()).toBe(10);
                 expect(panel.cycles()).toBe(2);
                 expect(panel.running()).toBe(true);
                 expect(tick).toHaveBeenCalledWith(0);
                 state.finishCycle(0);
-                return Promise.resolve();
+                return Promise.resolve().then(() => {});
             })
             .then(() => {
                 expect(panel.running()).toBe(false);
@@ -112,14 +165,16 @@ describe('Canvas broadcaster', () => {
         vi.spyOn(panel as any, 'draw').mockImplementation(() => {});
         panel.toggle(1);
         panel.start();
-        return Promise.resolve().then(() => {
-            expect(panel.session().map((rate) => rate.name)).toEqual(['Second']);
-            expect(panel.total()).toBe(1);
-            panel.stop();
-            expect(panel.running()).toBe(false);
-            expect(panel.total()).toBe(1);
-            fixture.destroy();
-        });
+        return Promise.resolve()
+            .then(() => {})
+            .then(() => {
+                expect(panel.session().map((rate) => rate.name)).toEqual(['Second']);
+                expect(panel.total()).toBe(1);
+                panel.stop();
+                expect(panel.running()).toBe(false);
+                expect(panel.total()).toBe(1);
+                fixture.destroy();
+            });
     });
 
     it('does not record late resonance results after cancellation', () => {
@@ -134,10 +189,12 @@ describe('Canvas broadcaster', () => {
         panel.start(true);
         panel.stop();
         resolve([true, true]);
-        return Promise.resolve().then(() => {
-            expect(panel.session().length).toBe(2);
-            expect(panel.total()).toBe(0);
-            fixture.destroy();
-        });
+        return Promise.resolve()
+            .then(() => {})
+            .then(() => {
+                expect(panel.session().length).toBe(2);
+                expect(panel.total()).toBe(0);
+                fixture.destroy();
+            });
     });
 });

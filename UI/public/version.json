@@ -1,4 +1,4 @@
 {
-    "version": "1.11.1",
-    "description": "Continue broadcasting with unseeded random when hotbits run out"
+    "version": "1.11.2",
+    "description": "Keep fallback broadcasts independent of storage and rendering interruptions"
 }

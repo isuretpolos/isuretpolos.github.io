@@ -1,5 +1,9 @@
 import { AnalysisResult, HotbitsExhausted } from './analysis';
 
+export const unseededDraws = {
+    integer: (maximum: number): number => Math.floor(Math.random() * (maximum + 1)),
+};
+
 export function broadcastingDraws(draws: { integer: (maximum: number) => number }, onFallback: () => void) {
     return {
         integer: (maximum: number): number => {
@@ -10,7 +14,7 @@ export function broadcastingDraws(draws: { integer: (maximum: number) => number 
                     throw error;
                 }
                 onFallback();
-                return Math.floor(Math.random() * (maximum + 1));
+                return unseededDraws.integer(maximum);
             }
         },
     };

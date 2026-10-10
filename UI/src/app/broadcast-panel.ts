@@ -1,8 +1,8 @@
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AnalysisResult } from './analysis';
+import { AnalysisResult, calculateGv } from './analysis';
 import { HotbitStore } from './hotbit-store';
-import { BroadcastRate, broadcastDuration } from './broadcast';
+import { BroadcastRate, broadcastDuration, resonanceHits, unseededDraws } from './broadcast';
 import { ClearFlash } from './clear-flash';
 
 @Component({
@@ -33,6 +33,7 @@ export class BroadcastPanel {
     readonly cycles = signal(1);
     readonly lastGv = signal<number | null>(null);
     readonly randomFallback = signal(false);
+    readonly renderMessage = signal('');
     seconds = 60;
     multiplier = 1;
     delta = true;
@@ -53,12 +54,6 @@ export class BroadcastPanel {
             this.results();
             this.selected.set([]);
         });
-        const hidden = () => {
-            if (document.hidden && this.running()) {
-                this.stop('Stopped because the page was hidden.');
-            }
-        };
-        document.addEventListener('visibilitychange', hidden);
         const escape = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && this.immersive()) {
                 this.closeStage();
@@ -87,7 +82,6 @@ export class BroadcastPanel {
         inject(DestroyRef).onDestroy(() => {
             this.stop();
             this.closeStage();
-            document.removeEventListener('visibilitychange', hidden);
             document.removeEventListener('keydown', escape);
             document.removeEventListener('fullscreenchange', fullscreenChanged);
         });
@@ -117,6 +111,7 @@ export class BroadcastPanel {
         this.cycles.set(1);
         this.lastGv.set(null);
         this.randomFallback.set(false);
+        this.renderMessage.set('');
         this.wave = 0;
         this.fullscreenMessage.set('');
         const canvas = this.canvas()?.nativeElement;
@@ -199,6 +194,7 @@ export class BroadcastPanel {
         this.cycles.set(1);
         this.lastGv.set(null);
         this.randomFallback.set(false);
+        this.renderMessage.set('');
         this.started = performance.now();
         this.running.set(true);
         this.busyChange.emit(true);
@@ -228,13 +224,24 @@ export class BroadcastPanel {
             this.finishCycle(token);
             return;
         }
-        const sample = this.resonanceEnabled
-            ? this.hotbits.broadcastResonance(this.session().length, this.sessionMultiplier, () => {
-                  if (token === this.generation) {
-                      this.randomFallback.set(true);
-                  }
-              })
-            : Promise.resolve(this.session().map(() => false));
+        const randomHits = () => resonanceHits(this.session().length, this.sessionMultiplier, unseededDraws);
+        const sample = !this.resonanceEnabled
+            ? Promise.resolve(this.session().map(() => false))
+            : this.randomFallback()
+              ? Promise.resolve(randomHits())
+              : this.hotbits
+                    .broadcastResonance(this.session().length, this.sessionMultiplier, () => {
+                        if (token === this.generation) {
+                            this.randomFallback.set(true);
+                        }
+                    })
+                    .catch(() => {
+                        // Broadcasting can continue even if browser storage becomes unavailable.
+                        if (token === this.generation) {
+                            this.randomFallback.set(true);
+                        }
+                        return randomHits();
+                    });
         sample
             .then((hits) => {
                 if (token !== this.generation) {
@@ -254,7 +261,14 @@ export class BroadcastPanel {
                 if (hits.some(Boolean)) {
                     this.wave = 1;
                 }
-                this.draw();
+                if (!document.hidden) {
+                    try {
+                        this.draw();
+                        this.renderMessage.set('');
+                    } catch {
+                        this.renderMessage.set('Visual rendering paused; broadcasting and resonance checks continue.');
+                    }
+                }
                 this.timer = setTimeout(() => this.tick(token), 1000 / 30);
             })
             .catch((error) => {
@@ -270,12 +284,21 @@ export class BroadcastPanel {
             return;
         }
         this.status.set('Checking target GV…');
-        this.hotbits
-            .targetMeasurement(() => {
-                if (token === this.generation) {
-                    this.randomFallback.set(true);
-                }
-            })
+        const measurement = this.randomFallback()
+            ? Promise.resolve(calculateGv(unseededDraws))
+            : this.hotbits
+                  .targetMeasurement(() => {
+                      if (token === this.generation) {
+                          this.randomFallback.set(true);
+                      }
+                  })
+                  .catch(() => {
+                      if (token === this.generation) {
+                          this.randomFallback.set(true);
+                      }
+                      return calculateGv(unseededDraws);
+                  });
+        measurement
             .then((gv) => {
                 if (token !== this.generation) {
                     return;
@@ -322,7 +345,7 @@ export class BroadcastPanel {
         context.fillRect(0, 0, width, height);
         context.strokeStyle = color();
         const cardRadius = Math.min(width, height) * 0.3;
-        for (const radius of [cardRadius, cardRadius - 10, cardRadius - 20]) {
+        for (const radius of [cardRadius, Math.max(1, cardRadius - 10), Math.max(1, cardRadius - 20)]) {
             context.beginPath();
             context.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
             context.stroke();

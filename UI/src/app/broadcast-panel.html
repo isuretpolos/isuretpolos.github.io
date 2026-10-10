@@ -117,8 +117,10 @@
             (!immersive() && running()) { <button class="glass-button" (click)="openStage()">Fullscreen</button> }
         </div>
         <div class="stage-bottom">
-            @if (randomFallback()) {
-            <p class="fullscreen-note">Hotbits depleted · unseeded random used for this session</p>
+            @if (renderMessage()) {
+            <p class="fullscreen-note">{{ renderMessage() }}</p>
+            } @if (randomFallback()) {
+            <p class="fullscreen-note">Unseeded random active · broadcast continues</p>
             } @if (session().length) {
             <p class="signature-line">
                 {{ session()[0].name }}@if (session().length > 1) { <span> + {{ session().length - 1 }} rates</span> }
