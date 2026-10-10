@@ -452,3 +452,18 @@ progress::-webkit-progress-value {
         align-items: end;
     }
 }
+
+.clear-button {
+    border-color: #b88bff77;
+    background: #914de820;
+    color: #dcc7ff;
+}
+@media (max-width: 450px) {
+    .heading {
+        flex-wrap: wrap;
+    }
+    .clear-button {
+        min-height: 40px;
+        padding: 8px 12px;
+    }
+}

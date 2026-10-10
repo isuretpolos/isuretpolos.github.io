@@ -6,6 +6,14 @@
             <h2 id="broadcast-heading">Broadcast</h2>
         </div>
         <span class="gv-chip">Target GV <strong>{{ targetGv() ?? '—' }}</strong></span>
+        <button
+            class="clear-button"
+            (click)="clear()"
+            [disabled]="clearFlash.active()"
+            aria-label="Clear broadcast and flash purple for four seconds"
+        >
+            {{ clearFlash.active() ? 'Clearing…' : 'Clear' }}
+        </button>
     </header>
     <fieldset [disabled]="running() || blocked()">
         <legend class="sr-only">Broadcast setup</legend>
@@ -99,6 +107,9 @@
     >
         <canvas #field width="640" height="360" aria-label="Animated broadcast signatures and resonance waves"></canvas>
         <div class="stage-top">
+            @if (immersive()) {
+            <button class="glass-button" (click)="clear()" [disabled]="clearFlash.active()">Clear</button>
+            }
             <span class="live-label" [class.active]="running()"
                 ><i></i>{{ running() ? 'BROADCASTING' : session().length ? 'SESSION ENDED' : 'BROADCAST FIELD' }}</span
             >

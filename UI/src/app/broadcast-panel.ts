@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { AnalysisResult } from './analysis';
 import { HotbitStore } from './hotbit-store';
 import { BroadcastRate, broadcastDuration } from './broadcast';
+import { ClearFlash } from './clear-flash';
 
 @Component({
     selector: 'app-broadcast',
@@ -17,6 +18,7 @@ export class BroadcastPanel {
     readonly busyChange = output<boolean>();
     readonly countsChanged = output<void>();
     private readonly hotbits = inject(HotbitStore);
+    readonly clearFlash = inject(ClearFlash);
     private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('field');
     private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
     readonly immersive = signal(false);
@@ -98,6 +100,27 @@ export class BroadcastPanel {
 
     total(): number {
         return this.session().reduce((sum, rate) => sum + rate.resonances, 0);
+    }
+
+    clear(): void {
+        if (this.clearFlash.active()) {
+            return;
+        }
+        this.stop();
+        this.closeStage();
+        this.selected.set([]);
+        this.session.set([]);
+        this.customRate = '';
+        this.elapsed.set(0);
+        this.duration.set(0);
+        this.cycles.set(1);
+        this.lastGv.set(null);
+        this.wave = 0;
+        this.fullscreenMessage.set('');
+        const canvas = this.canvas()?.nativeElement;
+        canvas?.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+        this.status.set('Broadcast cleared.');
+        this.clearFlash.start();
     }
 
     remaining(): number {
