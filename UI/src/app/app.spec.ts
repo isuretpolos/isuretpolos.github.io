@@ -13,6 +13,36 @@ describe('Rate workspace', () => {
         });
     });
 
+    it('keeps the screen awake during collection and releases only its own lock on stop', () => {
+        const lock = Object.assign(new EventTarget(), { release: vi.fn().mockResolvedValue(undefined) });
+        const request = vi.fn().mockResolvedValue(lock);
+        const original = Object.getOwnPropertyDescriptor(navigator, 'wakeLock');
+        Object.defineProperty(navigator, 'wakeLock', { configurable: true, value: { request } });
+        const fixture = TestBed.createComponent(App);
+        const app = fixture.componentInstance;
+        const http = TestBed.inject(HttpTestingController);
+        http.expectOne('/version.json').flush({ version: '1.0.0', description: 'First version' });
+        http.expectOne('/RATES/index.json').flush([]);
+        app.camera.collecting.set(true);
+        fixture.detectChanges();
+        return Promise.resolve()
+            .then(() => {
+                expect(request).toHaveBeenCalledWith('screen');
+                expect(app.collectionWakeLock.active()).toBe(true);
+                app.camera.collecting.set(false);
+                fixture.detectChanges();
+                expect(lock.release).toHaveBeenCalledTimes(1);
+                expect(app.collectionWakeLock.active()).toBe(false);
+            })
+            .finally(() => {
+                fixture.destroy();
+                if (original) {
+                    Object.defineProperty(navigator, 'wakeLock', original);
+                } else {
+                    Reflect.deleteProperty(navigator, 'wakeLock');
+                }
+            });
+    });
     it('enables analysis and fills progress as soon as the minimum count is available', () => {
         const fixture = TestBed.createComponent(App);
         const app = fixture.componentInstance;

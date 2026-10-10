@@ -54,7 +54,7 @@ export class BroadcastWakeLock {
                 }
                 this.lock = lock;
                 this.active.set(true);
-                this.message.set('Screen stays awake during fullscreen broadcasting.');
+                this.message.set('Screen stays awake while this activity is running.');
                 lock.addEventListener('release', () => {
                     if (this.lock === lock) {
                         this.lock = undefined;

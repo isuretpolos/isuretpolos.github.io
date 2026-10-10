@@ -1,4 +1,5 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { BroadcastWakeLock } from './broadcast-wake-lock';
 import { BroadcastPanel } from './broadcast-panel';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -17,11 +18,13 @@ import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './an
 
 @Component({
     selector: 'app-root',
+    providers: [BroadcastWakeLock],
     imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
 export class App {
+    readonly collectionWakeLock = inject(BroadcastWakeLock);
     readonly history = inject(AnalysisHistory);
     readonly currentHistoryId = signal('');
     private readonly http = inject(HttpClient);
@@ -167,6 +170,7 @@ export class App {
     readOnly = false;
 
     constructor() {
+        effect(() => this.collectionWakeLock.setEnabled(this.camera.collecting()));
         try {
             if (localStorage.getItem('radionics.ui-mode') === 'advanced') {
                 this.mode.set('advanced');

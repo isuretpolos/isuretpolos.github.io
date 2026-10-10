@@ -131,7 +131,9 @@
             </div>
             @if (camera.collecting()) {
             <button class="primary full" (click)="camera.stop()"><app-icon name="camera" />Stop &amp; Save</button>
-            } @else {
+            @if (collectionWakeLock.message()) {
+            <p class="hint" role="status">{{ collectionWakeLock.message() }}</p>
+            } } @else {
             <button
                 class="primary full"
                 (click)="startCollection()"
