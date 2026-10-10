@@ -90,6 +90,7 @@ export class App {
     readonly hotbitReady = signal(false);
     private writes: Promise<void> = Promise.resolve();
     readonly required = (): number => this.rates().length * 10 + Math.min(20, this.rates().length) * 3;
+    readonly minimumRequired = (): number => Math.ceil(this.required() * 0.2);
     readonly mode = signal<'simple' | 'advanced'>('simple');
     readonly expandedResults = signal(false);
     readonly storageStatus = signal('Browser-managed local storage');
@@ -109,7 +110,7 @@ export class App {
         if (!this.rates().length) {
             return 1;
         }
-        return this.hotbitReady() && this.available() >= this.required() ? 3 : 2;
+        return this.hotbitReady() && this.available() >= this.minimumRequired() ? 3 : 2;
     }
 
     progressPercent(): number {

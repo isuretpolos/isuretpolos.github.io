@@ -1,4 +1,4 @@
-import { analyzeRates, HotbitDraws } from './analysis';
+import { analyzeRates, HotbitDraws, SpreadDraws } from './analysis';
 import { BitConditioner } from './bit-conditioner';
 
 const rates = (count: number) =>
@@ -127,5 +127,37 @@ describe('Bit conditioning and uint32 packing', () => {
             conditioner.accept(1);
         }
         expect(conditioner.assessment()).toBe('failed');
+    });
+});
+
+describe('Spaced hotbit seeding', () => {
+    it('spreads 200 hotbits over 450 generated draws', () => {
+        const source = new HotbitDraws(new Uint32Array(200));
+        const draws = new SpreadDraws(450).bind(source);
+        for (let index = 0; index < 450; index++) {
+            const value = draws.integer(1000);
+            expect(value).toBeGreaterThanOrEqual(0);
+            expect(value).toBeLessThanOrEqual(1000);
+            if (index === 224) {
+                expect(source.consumed).toBe(100);
+            }
+        }
+        expect(source.consumed).toBe(200);
+    });
+    it('keeps its schedule and generator across broadcast transactions', () => {
+        const spread = new SpreadDraws(36000);
+        let consumed = 0;
+        for (let frame = 0; frame < 1800; frame++) {
+            const source = new HotbitDraws(new Uint32Array(1000 - consumed));
+            const draws = spread.bind(source);
+            for (let rate = 0; rate < 20; rate++) {
+                draws.integer(6765);
+            }
+            consumed += source.consumed;
+            if (frame === 899) {
+                expect(consumed).toBe(500);
+            }
+        }
+        expect(consumed).toBe(1000);
     });
 });

@@ -16,6 +16,10 @@ export class HotbitDraws {
     private cursor = 0;
     constructor(private readonly words: Uint32Array) {}
 
+    get available(): number {
+        return this.words.length - this.cursor;
+    }
+
     get consumed(): number {
         return this.cursor;
     }
@@ -65,4 +69,54 @@ export function analyzeRates(rates: Rate[], draws: { integer: (maximum: number) 
 export function calculateGv(draws: { integer: (maximum: number) => number }): number {
     const base = Math.max(draws.integer(1000), draws.integer(1000), draws.integer(1000));
     return expandGv(base, draws).gv;
+}
+
+export class SpreadDraws {
+    private state = Math.floor(Math.random() * 0x100000000);
+    private position = 0;
+    private interval = 1;
+    private initialized = false;
+    private seeded = false;
+
+    constructor(
+        private readonly expected: number,
+        private readonly onSeeded: () => void = () => {},
+    ) {}
+
+    bind(source: HotbitDraws): { integer: (maximum: number) => number } {
+        if (!this.initialized) {
+            this.interval = source.available < this.expected ? this.expected / Math.max(1, source.available) : 1;
+            this.seeded = this.interval > 1;
+            this.initialized = true;
+            if (this.seeded) {
+                this.onSeeded();
+            }
+        }
+        return {
+            integer: (maximum: number): number => {
+                if (!this.seeded) {
+                    try {
+                        return source.integer(maximum);
+                    } catch (error) {
+                        if (!(error instanceof HotbitsExhausted)) {
+                            throw error;
+                        }
+                        this.seeded = true;
+                        this.onSeeded();
+                    }
+                }
+                const reseed =
+                    Math.floor(this.position / this.interval) !== Math.floor((this.position - 1) / this.interval);
+                if (reseed && source.available) {
+                    this.state = (this.state ^ source.integer(0xffffffff)) >>> 0;
+                }
+                this.position++;
+                // Mulberry32 supports every 32-bit seed, including zero.
+                this.state = (this.state + 0x6d2b79f5) >>> 0;
+                let value = Math.imul(this.state ^ (this.state >>> 15), this.state | 1);
+                value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+                return Math.floor((((value ^ (value >>> 14)) >>> 0) / 0x100000000) * (maximum + 1));
+            },
+        };
+    }
 }

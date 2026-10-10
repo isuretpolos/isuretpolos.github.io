@@ -619,3 +619,20 @@ footer {
         bottom: 0;
     }
 }
+
+.hotbit-meter {
+    position: relative;
+    flex: 1;
+}
+.hotbit-meter progress {
+    width: 100%;
+}
+.hotbit-threshold {
+    position: absolute;
+    left: 20%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: currentColor;
+    pointer-events: none;
+}

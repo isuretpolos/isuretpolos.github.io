@@ -85,12 +85,36 @@ describe('IndexedDB hotbit transactions', () => {
             .then((counts) => expect(counts).toEqual({ available: 0, consumed: 26 }));
     });
 
-    it('retires partial failed attempts rather than replaying their entropy', () => {
+    it('rejects analysis below 20 percent without consuming hotbits', () => {
         const store = new HotbitStore();
         return store
             .append(new Uint32Array(2))
             .then(() => expect(store.analyze([{ name: 'A', originalIndex: 0 }])).rejects.toThrow('Insufficient'))
             .then(() => store.counts())
-            .then((counts) => expect(counts).toEqual({ available: 0, consumed: 2 }));
+            .then((counts) => expect(counts).toEqual({ available: 2, consumed: 0 }));
+    });
+});
+
+describe('Limited analysis supply', () => {
+    beforeEach(() => vi.stubGlobal('indexedDB', new IDBFactory()));
+    afterEach(() => vi.unstubAllGlobals());
+    const rates = Array.from({ length: 39 }, (_, originalIndex) => ({ name: 'Flower', originalIndex }));
+    it('completes 39-rate analysis with 200 hotbits', () => {
+        const store = new HotbitStore();
+        return store
+            .append(new Uint32Array(200))
+            .then(() => store.analyze(rates))
+            .then((result) => {
+                expect(result.length).toBe(20);
+                return store.counts();
+            })
+            .then((counts) => expect(counts.consumed).toBe(200));
+    });
+    it('accepts the exact 20 percent threshold', () => {
+        const store = new HotbitStore();
+        return store
+            .append(new Uint32Array(90))
+            .then(() => store.analyze(rates))
+            .then((result) => expect(result.length).toBe(20));
     });
 });

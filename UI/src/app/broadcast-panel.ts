@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AnalysisResult, calculateGv } from './analysis';
+import { AnalysisResult, calculateGv, SpreadDraws } from './analysis';
 import { HotbitStore } from './hotbit-store';
 import { BroadcastRate, broadcastDuration, resonanceHits, unseededDraws } from './broadcast';
 import { ClearFlash } from './clear-flash';
@@ -50,6 +50,8 @@ export class BroadcastPanel {
     private resonanceEnabled = false;
     private sessionMultiplier = 1;
     private wave = 0;
+    private spread?: SpreadDraws;
+    private storageFailed = false;
     private previousOverflow = '';
 
     constructor() {
@@ -201,12 +203,21 @@ export class BroadcastPanel {
         this.randomFallback.set(false);
         this.renderMessage.set('');
         this.started = performance.now();
+        this.storageFailed = false;
         this.running.set(true);
         this.busyChange.emit(true);
         this.status.set('Broadcasting');
         this.openStage();
         this.wakeLock.setEnabled(this.immersive());
         const token = ++this.generation;
+        this.spread = new SpreadDraws(
+            Math.ceil(this.duration() * 30) * (this.resonanceEnabled ? rates.length : 0) + (this.checkEnabled ? 3 : 0),
+            () => {
+                if (token === this.generation) {
+                    this.randomFallback.set(true);
+                }
+            },
+        );
         this.tick(token);
     }
 
@@ -234,16 +245,22 @@ export class BroadcastPanel {
         const randomHits = () => resonanceHits(this.session().length, this.sessionMultiplier, unseededDraws);
         const sample = !this.resonanceEnabled
             ? Promise.resolve(this.session().map(() => false))
-            : this.randomFallback()
+            : this.storageFailed
               ? Promise.resolve(randomHits())
               : this.hotbits
-                    .broadcastResonance(this.session().length, this.sessionMultiplier, () => {
-                        if (token === this.generation) {
-                            this.randomFallback.set(true);
-                        }
-                    })
+                    .broadcastResonance(
+                        this.session().length,
+                        this.sessionMultiplier,
+                        () => {
+                            if (token === this.generation) {
+                                this.randomFallback.set(true);
+                            }
+                        },
+                        this.spread,
+                    )
                     .catch(() => {
                         // Broadcasting can continue even if browser storage becomes unavailable.
+                        this.storageFailed = true;
                         if (token === this.generation) {
                             this.randomFallback.set(true);
                         }
@@ -291,20 +308,18 @@ export class BroadcastPanel {
             return;
         }
         this.status.set('Checking target GV…');
-        const measurement = this.randomFallback()
-            ? Promise.resolve(calculateGv(unseededDraws))
-            : this.hotbits
-                  .targetMeasurement(() => {
-                      if (token === this.generation) {
-                          this.randomFallback.set(true);
-                      }
-                  })
-                  .catch(() => {
-                      if (token === this.generation) {
-                          this.randomFallback.set(true);
-                      }
-                      return calculateGv(unseededDraws);
-                  });
+        const measurement = this.hotbits
+            .targetMeasurement(() => {
+                if (token === this.generation) {
+                    this.randomFallback.set(true);
+                }
+            }, this.spread)
+            .catch(() => {
+                if (token === this.generation) {
+                    this.randomFallback.set(true);
+                }
+                return calculateGv(unseededDraws);
+            });
         measurement
             .then((gv) => {
                 if (token !== this.generation) {
@@ -317,6 +332,9 @@ export class BroadcastPanel {
                 } else {
                     this.cycles.update((value) => value + 1);
                     this.duration.set(10);
+                    this.spread = new SpreadDraws(300 * (this.resonanceEnabled ? this.session().length : 0) + 3, () =>
+                        this.randomFallback.set(true),
+                    );
                     this.started = performance.now();
                     this.status.set('GV below target; broadcasting for another 10 seconds.');
                     this.tick(token);

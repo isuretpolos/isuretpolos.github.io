@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AnalysisResult, analyzeRates, calculateGv, HotbitDraws } from './analysis';
+import { AnalysisResult, analyzeRates, calculateGv, HotbitDraws, HotbitsExhausted, SpreadDraws } from './analysis';
 import { broadcastingDraws, resonanceHits } from './broadcast';
 import { Rate } from './rate-list';
 import { analyzePhotoGrid, PhotoCell } from './photo-grid';
@@ -68,7 +68,13 @@ export class HotbitStore {
     }
 
     analyze(rates: Rate[]): Promise<AnalysisResult[]> {
-        return this.consume((draws) => analyzeRates(rates, draws));
+        return this.consume((draws) => {
+            const required = rates.length * 10 + Math.min(20, rates.length) * 3;
+            if (draws.available < Math.ceil(required * 0.2)) {
+                throw new HotbitsExhausted();
+            }
+            return analyzeRates(rates, new SpreadDraws(required).bind(draws));
+        });
     }
 
     analyzePhoto(width: number, height: number, grid: number): Promise<PhotoCell[]> {
@@ -79,12 +85,21 @@ export class HotbitStore {
         return this.consume((draws) => calculateLiveGv(draws));
     }
 
-    targetMeasurement(onFallback?: () => void): Promise<number> {
-        return this.consume((draws) => calculateGv(onFallback ? broadcastingDraws(draws, onFallback) : draws));
+    targetMeasurement(onFallback?: () => void, spread?: SpreadDraws): Promise<number> {
+        return this.consume((draws) =>
+            calculateGv(spread ? spread.bind(draws) : onFallback ? broadcastingDraws(draws, onFallback) : draws),
+        );
     }
 
-    broadcastResonance(count: number, multiplier: number, onFallback: () => void = () => {}): Promise<boolean[]> {
-        return this.consume((draws) => resonanceHits(count, multiplier, broadcastingDraws(draws, onFallback)));
+    broadcastResonance(
+        count: number,
+        multiplier: number,
+        onFallback: () => void = () => {},
+        spread?: SpreadDraws,
+    ): Promise<boolean[]> {
+        return this.consume((draws) =>
+            resonanceHits(count, multiplier, spread ? spread.bind(draws) : broadcastingDraws(draws, onFallback)),
+        );
     }
 
     private consume<T>(analysis: (draws: HotbitDraws) => T): Promise<T> {

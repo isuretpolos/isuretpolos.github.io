@@ -74,7 +74,9 @@
                 <label class="setting"
                     ><input type="checkbox" [(ngModel)]="resonance" /><span
                         ><strong>Resonance detection</strong
-                        ><small>Use stored hotbits, then unseeded random when they run out.</small></span
+                        ><small
+                            >Spread limited hotbits across the broadcast by periodically seeding generated draws.</small
+                        ></span
                     ></label
                 >
                 <label class="setting"
@@ -122,7 +124,7 @@
             } @if (renderMessage()) {
             <p class="fullscreen-note">{{ renderMessage() }}</p>
             } @if (randomFallback()) {
-            <p class="fullscreen-note">Unseeded random active · broadcast continues</p>
+            <p class="fullscreen-note">Seeded random mode · available hotbits spread across broadcast</p>
             } @if (session().length) {
             <p class="signature-line">
                 {{ session()[0].name }}@if (session().length > 1) { <span> + {{ session().length - 1 }} rates</span> }

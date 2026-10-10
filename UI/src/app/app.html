@@ -144,17 +144,21 @@
             }
             <div class="progress-row">
                 <label for="hotbit-progress">{{ available() }} / {{ required() }}</label>
-                <progress
-                    id="hotbit-progress"
-                    [value]="available()"
-                    [max]="required() || 1"
-                    aria-label="Stored hotbits toward analysis minimum"
-                ></progress
-                ><span>{{ progressPercent() }}%</span>
+                <div class="hotbit-meter">
+                    <span class="hotbit-threshold" title="Analysis enabled at 20%"></span
+                    ><progress
+                        id="hotbit-progress"
+                        [value]="available()"
+                        [max]="required() || 1"
+                        aria-label="Stored hotbits toward full analysis estimate; analysis enabled at 20 percent"
+                    ></progress>
+                </div>
+                <span>{{ progressPercent() }}%</span>
             </div>
             <p class="ready">
                 {{ !rates().length ? 'Load a list to set your target' : available() >= required() ? 'Enough Hotbits
-                available' : 'Collecting toward the analysis minimum' }}
+                available' : available() >= minimumRequired() ? 'Seeded mode ready · hotbits spread across analysis' :
+                'Collect at least 20% to enable analysis' }}
             </p>
         </section>
         <section class="card" id="analyze-card" aria-labelledby="analyze-heading" [attr.aria-busy]="analyzing()">
@@ -183,14 +187,17 @@
             <button
                 class="analysis-button full"
                 (click)="runAnalysis()"
-                [disabled]="checkingTarget() || broadcastBusy() || targetGv() === null || updateApplying() || liveBusy() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
+                [disabled]="checkingTarget() || broadcastBusy() || targetGv() === null || updateApplying() || liveBusy() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < minimumRequired()"
             >
                 <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
             @if (analyzing()) {
             <p class="processing" role="status">Processing your list…</p>
             }
-            <p class="hint">Collection continues during analysis. Additional draws may require more Hotbits.</p>
+            <p class="hint">
+                Analysis starts at 20% ({{ minimumRequired() }} Hotbits). Below 100%, stored hotbits periodically seed
+                generated draws. Collection continues during analysis.
+            </p>
         </section>
         <section class="card results-card" id="results-card" tabindex="-1" aria-labelledby="results-heading">
             <div class="card-heading">
@@ -485,10 +492,12 @@
                     original list order.
                 </p>
                 <p>
-                    Duplicate names remain independent rows in original order. Every draw consumes fresh conditioned
-                    hotbits using rejection sampling. Failed attempts retire consumed material and return no partial
-                    results. Analysis requires stored hotbits. During broadcasting, resonance and GV rechecks use
-                    unseeded random when hotbits run out. Raw bits and integers are never displayed.
+                    Duplicate names remain independent rows in original order. With sufficient supply, draws use fresh
+                    conditioned hotbits with rejection sampling. With limited supply, one stored 32-bit hotbit
+                    periodically reseeds a local pseudorandom generator; generated draws do not add true randomness.
+                    Failed attempts retire consumed material and return no partial results. Analysis requires at least
+                    20% of the estimated hotbits. During broadcasting, resonance and GV rechecks use periodically seeded
+                    random when the estimated supply is insufficient. Raw bits and integers are never displayed.
                 </p>
                 <p>
                     Camera access requires HTTPS or localhost. If access is denied, enable camera permission in browser
