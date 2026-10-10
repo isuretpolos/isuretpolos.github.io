@@ -1,4 +1,4 @@
 {
-    "version": "1.9.0",
-    "description": "Add target GV checking and Canvas broadcasting with rate selection and resonance counts"
+    "version": "1.9.1",
+    "description": "Serve target GV and broadcasting controls in the root application"
 }
