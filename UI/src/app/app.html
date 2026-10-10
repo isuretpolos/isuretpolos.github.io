@@ -47,7 +47,7 @@
         <button
             class="secondary"
             (click)="updateNow()"
-            [disabled]="camera.collecting() || liveBusy() || photoBusy() || analyzing() || updateApplying()"
+            [disabled]="camera.collecting() || liveBusy() || broadcastBusy() || checkingTarget() || photoBusy() || analyzing() || updateApplying()"
         >
             Update now
         </button>
@@ -163,10 +163,25 @@
                     <p>Analyze the loaded rate list.</p>
                 </div>
             </div>
+            <label for="target-name">Target / intention</label>
+            <input
+                id="target-name"
+                [(ngModel)]="targetName"
+                (ngModelChange)="targetChanged()"
+                [disabled]="analyzing() || checkingTarget() || broadcastBusy()"
+            />
+            <button
+                class="secondary full"
+                (click)="checkTarget()"
+                [disabled]="checkingTarget() || broadcastBusy() || analyzing() || liveBusy() || photoBusy() || updateApplying() || !hotbitReady() || available() < 3"
+            >
+                {{ checkingTarget() ? 'Checking target GV…' : 'Check Target GV' }}
+            </button>
+            <p role="status">Target GV: {{ targetGv() ?? 'Check before analyzing the list' }}</p>
             <button
                 class="analysis-button full"
                 (click)="runAnalysis()"
-                [disabled]="updateApplying() || liveBusy() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
+                [disabled]="checkingTarget() || broadcastBusy() || targetGv() === null || updateApplying() || liveBusy() || photoBusy() || analyzing() || !rates().length || !hotbitReady() || available() < required()"
             >
                 <app-icon name="bars" />{{ analyzing() ? 'Analyzing…' : 'Analyze List' }}<app-icon name="arrow" />
             </button>
@@ -473,17 +488,24 @@
         </details>
     </div>
     }
+    <app-broadcast
+        [results]="results()"
+        [targetGv]="analysisTargetGv()"
+        [blocked]="analyzing() || checkingTarget() || liveBusy() || photoBusy() || updateApplying()"
+        (busyChange)="broadcastBusy.set($event)"
+        (countsChanged)="refreshHotbits()"
+    />
     <app-photo-analysis
         [mode]="mode()"
         [available]="available()"
-        [blocked]="liveBusy() || analyzing() || updateApplying()"
+        [blocked]="broadcastBusy() || checkingTarget() || liveBusy() || analyzing() || updateApplying()"
         (busyChange)="photoBusy.set($event)"
         (countsChanged)="refreshHotbits()"
     />
     <app-live-analysis
         [mode]="mode()"
         [available]="available()"
-        [blocked]="photoBusy() || analyzing() || updateApplying()"
+        [blocked]="broadcastBusy() || checkingTarget() || photoBusy() || analyzing() || updateApplying()"
         (busyChange)="liveBusy.set($event)"
         (countsChanged)="refreshHotbits()"
     />

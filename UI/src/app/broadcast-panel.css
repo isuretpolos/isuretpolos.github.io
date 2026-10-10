@@ -1,0 +1,47 @@
+:host {
+    display: block;
+    margin-top: 1.5rem;
+}
+.card {
+    padding: 1.5rem;
+    border: 1px solid #423959;
+    border-radius: 1rem;
+    background: #151126;
+}
+fieldset {
+    border: 0;
+    padding: 0;
+}
+label {
+    display: block;
+    margin: 0.75rem 0;
+}
+input[type='checkbox'] {
+    width: auto;
+    margin-right: 0.6rem;
+}
+input[type='number'] {
+    display: block;
+    max-width: 12rem;
+}
+.actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 1rem 0;
+}
+canvas {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+    background: #09051c;
+    border-radius: 0.75rem;
+}
+progress {
+    width: 100%;
+    margin-top: 1rem;
+}
+li {
+    margin: 0.5rem 0;
+}

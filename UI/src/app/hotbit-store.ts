@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { AnalysisResult, analyzeRates, HotbitDraws } from './analysis';
+import { AnalysisResult, analyzeRates, calculateGv, HotbitDraws } from './analysis';
+import { resonanceHits } from './broadcast';
 import { Rate } from './rate-list';
 import { analyzePhotoGrid, PhotoCell } from './photo-grid';
 import { calculateLiveGv } from './gv-expansion';
@@ -76,6 +77,14 @@ export class HotbitStore {
 
     liveMeasurement(): Promise<ReturnType<typeof calculateLiveGv>> {
         return this.consume((draws) => calculateLiveGv(draws));
+    }
+
+    targetMeasurement(): Promise<number> {
+        return this.consume((draws) => calculateGv(draws));
+    }
+
+    broadcastResonance(count: number, multiplier: number): Promise<boolean[]> {
+        return this.consume((draws) => resonanceHits(count, multiplier, draws));
     }
 
     private consume<T>(analysis: (draws: HotbitDraws) => T): Promise<T> {

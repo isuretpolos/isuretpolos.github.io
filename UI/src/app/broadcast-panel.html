@@ -1,0 +1,64 @@
+<section class="card" aria-labelledby="broadcast-heading">
+    <h2 id="broadcast-heading">5. Broadcast</h2>
+    <p>Target GV: {{ targetGv() ?? 'Check target GV before analysis' }}</p>
+    <fieldset [disabled]="running() || blocked()">
+        <legend>Rates to broadcast</legend>
+        @for (rate of results(); track rate.originalIndex) {
+        <label class="rate"
+            ><input
+                type="checkbox"
+                [checked]="selected().includes(rate.originalIndex)"
+                (change)="toggle(rate.originalIndex)"
+            />{{ rate.name }} · GV {{ rate.gv }}</label
+        >
+        } @empty {
+        <p>Analyze a rate list first.</p>
+        }
+        <label>Duration (seconds)<input type="number" min="1" max="86400" [(ngModel)]="seconds" /></label>
+        <label>Multiplier<input type="number" min="1" max="1000" [(ngModel)]="multiplier" /></label>
+        <label><input type="checkbox" [(ngModel)]="delta" />Use GV delta duration</label>
+        <p>
+            When target GV is lower than the entered seconds, subtract it from the duration; otherwise use the entered
+            seconds.
+        </p>
+        <label><input type="checkbox" [(ngModel)]="resonance" />Check resonance with stored hotbits</label>
+        <label
+            ><input type="checkbox" [(ngModel)]="counterCheck" />Recheck GV after broadcasting; repeat for 10 seconds
+            until GV reaches the starting target</label
+        >
+        <div class="actions">
+            <button (click)="start()" [disabled]="!selected().length || targetGv() === null">
+                Broadcast Selected ({{ selected().length }})
+            </button>
+            <button (click)="start(true)" [disabled]="!results().length || targetGv() === null">Broadcast All</button>
+        </div>
+    </fieldset>
+    <canvas #field width="640" height="360" aria-label="Animated broadcast signatures and resonance waves"></canvas>
+    @if (running()) {
+    <progress [value]="elapsed()" [max]="duration()" aria-label="Broadcast progress"></progress>
+    <p>Cycle {{ cycles() }} · {{ elapsed().toFixed(1) }} / {{ duration() }} seconds</p>
+    <button (click)="stop()">Stop Broadcast</button>
+    }
+    <p role="status">{{ status() }}</p>
+    @if (lastGv() !== null) {
+    <p>Latest target GV: {{ lastGv() }}</p>
+    } @if (session().length) {
+    <h3>Resonances: {{ total() }}</h3>
+    <p>Counts remain visible after completion or interruption.</p>
+    <ul>
+        @for (rate of session(); track rate.originalIndex) {
+        <li>
+            {{ rate.name }}: <strong>{{ rate.resonances }}</strong>
+            @if (rate.events.length) {
+            <details>
+                <summary>Resonance times</summary>
+                @for (time of rate.events; track $index) {
+                <p>{{ time }}</p>
+                }
+            </details>
+            }
+        </li>
+        }
+    </ul>
+    }
+</section>

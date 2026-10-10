@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { BroadcastPanel } from './broadcast-panel';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { parseRates, Rate, SavedList } from './rate-list';
@@ -16,7 +17,7 @@ import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './an
 
 @Component({
     selector: 'app-root',
-    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall],
+    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
@@ -43,6 +44,43 @@ export class App {
     readonly liveBusy = signal(false);
     readonly photoBusy = signal(false);
     readonly analyzing = signal(false);
+    readonly checkingTarget = signal(false);
+    readonly targetGv = signal<number | null>(null);
+    readonly analysisTargetGv = signal<number | null>(null);
+    readonly broadcastBusy = signal(false);
+    targetName = '';
+
+    targetChanged(): void {
+        this.targetGv.set(null);
+        this.analysisTargetGv.set(null);
+        this.results.set([]);
+    }
+
+    checkTarget(): void {
+        if (
+            this.checkingTarget() ||
+            this.broadcastBusy() ||
+            this.analyzing() ||
+            this.liveBusy() ||
+            this.photoBusy() ||
+            this.updateApplying()
+        ) {
+            return;
+        }
+        this.checkingTarget.set(true);
+        this.targetGv.set(null);
+        this.analysisTargetGv.set(null);
+        this.results.set([]);
+        this.error.set('');
+        this.writes
+            .then(() => this.hotbits.targetMeasurement())
+            .then((gv) => this.targetGv.set(gv))
+            .catch((error) => this.fail(error))
+            .finally(() => {
+                this.checkingTarget.set(false);
+                this.refreshHotbits();
+            });
+    }
     readonly results = signal<AnalysisResult[]>([]);
     readonly resultListName = signal('');
     readonly hotbitReady = signal(false);
@@ -55,7 +93,7 @@ export class App {
     readonly stepLabels = ['Select List', 'Collect', 'Analyze', 'Results'];
 
     currentStep(): number {
-        if (this.analyzing()) {
+        if (this.analyzing() || this.broadcastBusy() || this.checkingTarget()) {
             return 3;
         }
         if (this.results().length) {
@@ -317,18 +355,29 @@ export class App {
     }
 
     runAnalysis(): void {
-        if (this.updateApplying() || this.liveBusy() || this.photoBusy() || this.analyzing() || !this.rates().length) {
+        if (
+            this.checkingTarget() ||
+            this.broadcastBusy() ||
+            this.targetGv() === null ||
+            this.updateApplying() ||
+            this.liveBusy() ||
+            this.photoBusy() ||
+            this.analyzing() ||
+            !this.rates().length
+        ) {
             return;
         }
         const rates = this.rates().map((rate) => ({ ...rate }));
         const listName = this.name || 'Untitled list';
+        const targetGv = this.targetGv();
         this.analyzing.set(true);
         this.results.set([]);
         this.error.set('');
         this.writes
             .then(() => this.hotbits.analyze(rates))
             .then((results) => {
-                this.currentHistoryId.set(this.history.add(listName, results).id);
+                this.currentHistoryId.set(this.history.add(listName, results, targetGv ?? undefined).id);
+                this.analysisTargetGv.set(targetGv);
                 this.results.set(results);
                 this.resultListName.set(listName);
                 this.expandedResults.set(false);
@@ -348,6 +397,8 @@ export class App {
 
     updateNow(): void {
         if (
+            this.broadcastBusy() ||
+            this.checkingTarget() ||
             !this.updates.ready() ||
             this.camera.collecting() ||
             this.liveBusy() ||
@@ -361,7 +412,14 @@ export class App {
         // A stopped camera can still have a final IndexedDB batch queued for persistence.
         this.writes
             .then(() => {
-                if (!this.camera.collecting() && !this.liveBusy() && !this.photoBusy() && !this.analyzing()) {
+                if (
+                    !this.broadcastBusy() &&
+                    !this.checkingTarget() &&
+                    !this.camera.collecting() &&
+                    !this.liveBusy() &&
+                    !this.photoBusy() &&
+                    !this.analyzing()
+                ) {
                     this.updates.reload();
                 }
             })
@@ -370,9 +428,10 @@ export class App {
     }
 
     showHistory(entry: HistoryEntry): void {
-        if (this.analyzing()) {
+        if (this.analyzing() || this.broadcastBusy() || this.checkingTarget()) {
             return;
         }
+        this.analysisTargetGv.set(entry.targetGv ?? null);
         this.results.set(entry.results.map((result) => ({ ...result })));
         this.resultListName.set(entry.listName);
         this.currentHistoryId.set(entry.id);

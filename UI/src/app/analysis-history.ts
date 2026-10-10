@@ -6,6 +6,7 @@ export interface HistoryEntry {
     date: string;
     listName: string;
     note: string;
+    targetGv?: number;
     results: AnalysisResult[];
 }
 
@@ -28,12 +29,13 @@ export class AnalysisHistory {
         }
     }
 
-    add(listName: string, results: AnalysisResult[]): HistoryEntry {
+    add(listName: string, results: AnalysisResult[], targetGv?: number): HistoryEntry {
         const entry = {
             id: crypto.randomUUID(),
             date: new Date().toISOString(),
             listName,
             note: '',
+            targetGv,
             results: results.map((result) => ({ ...result })),
         };
         this.save([entry, ...this.entries()].slice(0, 10));
@@ -68,6 +70,7 @@ function isHistoryEntry(value: unknown): value is HistoryEntry {
         Number.isFinite(Date.parse(entry.date)) &&
         typeof entry.listName === 'string' &&
         typeof entry.note === 'string' &&
+        (entry.targetGv === undefined || (Number.isInteger(entry.targetGv) && entry.targetGv >= 0)) &&
         Array.isArray(entry.results) &&
         entry.results.length > 0 &&
         entry.results.length <= 20 &&

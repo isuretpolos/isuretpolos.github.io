@@ -28,6 +28,7 @@ describe('Rate workspace', () => {
             element.textContent?.includes('Analyze List'),
         )!;
         expect(button.disabled).toBe(true);
+        app.targetGv.set(500);
         app.available.set(13);
         fixture.detectChanges();
         expect(button.disabled).toBe(false);
@@ -94,6 +95,7 @@ describe('Rate workspace', () => {
                     ? Promise.reject(new Error('Insufficient hotbits'))
                     : Promise.resolve([{ name: 'Arnica', originalIndex: 0, energeticScore: 50, gv: 1039 }]),
             );
+        app.targetGv.set(500);
         app.runAnalysis();
         expect(stop).not.toHaveBeenCalled();
         return fixture.whenStable().then(() => {
