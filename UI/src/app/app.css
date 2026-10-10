@@ -582,6 +582,35 @@ footer {
     font-size: 0.75rem;
     padding: 8px;
 }
+.patreon-promotion {
+    max-width: 760px;
+    margin: 24px auto;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: var(--background-secondary);
+    font-size: 0.9rem;
+    text-align: left;
+}
+.patreon-promotion a {
+    color: var(--cyan);
+}
+.patreon-promotion .patreon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    background: #ff424d;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+}
+.patreon-button:hover {
+    filter: brightness(1.1);
+}
 @media (max-width: 720px) {
     .app-header {
         padding-bottom: 50px;
