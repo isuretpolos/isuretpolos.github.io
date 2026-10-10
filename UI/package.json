@@ -4,7 +4,7 @@
     "scripts": {
         "ng": "ng",
         "start": "ng serve",
-        "build": "node scripts/version.mjs sync && node scripts/rates-manifest.mjs && ng build",
+        "build": "node scripts/version.mjs sync && node scripts/rates-manifest.mjs && node scripts/clean-main-bundles.mjs && ng build",
         "watch": "ng build --watch --configuration development",
         "test": "ng test",
         "deploy": "npm run build && node scripts/deploy.mjs",
