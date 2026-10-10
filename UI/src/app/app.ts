@@ -90,10 +90,13 @@ export class App {
     readonly expandedResults = signal(false);
     readonly storageStatus = signal('Browser-managed local storage');
     listChoice = '';
-    readonly stepLabels = ['Select List', 'Collect', 'Analyze', 'Results'];
+    readonly stepLabels = ['Select List', 'Collect', 'Analyze', 'Results', 'Broadcast'];
 
     currentStep(): number {
-        if (this.analyzing() || this.broadcastBusy() || this.checkingTarget()) {
+        if (this.broadcastBusy()) {
+            return 5;
+        }
+        if (this.analyzing() || this.checkingTarget()) {
             return 3;
         }
         if (this.results().length) {

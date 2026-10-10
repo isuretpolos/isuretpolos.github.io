@@ -74,7 +74,7 @@
     <nav class="steps" aria-label="Analysis workflow">
         @for (label of stepLabels; track $index) {
         <a
-            [href]="'#' + ['list-card', 'collect-card', 'analyze-card', 'results-card'][$index]"
+            [href]="'#' + ['list-card', 'collect-card', 'analyze-card', 'results-card', 'broadcast-card'][$index]"
             [class.active]="currentStep() === $index + 1"
             [class.complete]="currentStep() > $index + 1"
             [class.future]="currentStep() < $index + 1"
@@ -241,6 +241,14 @@
             }
         </section>
     </div>
+    <app-broadcast
+        id="broadcast-card"
+        [results]="results()"
+        [targetGv]="analysisTargetGv() ?? targetGv()"
+        [blocked]="analyzing() || checkingTarget() || liveBusy() || photoBusy() || updateApplying()"
+        (busyChange)="broadcastBusy.set($event)"
+        (countsChanged)="refreshHotbits()"
+    />
     <details class="history-panel">
         <summary>Analysis history · {{ history.entries().length }}/10</summary>
         <div class="panel-content">
@@ -488,13 +496,7 @@
         </details>
     </div>
     }
-    <app-broadcast
-        [results]="results()"
-        [targetGv]="analysisTargetGv()"
-        [blocked]="analyzing() || checkingTarget() || liveBusy() || photoBusy() || updateApplying()"
-        (busyChange)="broadcastBusy.set($event)"
-        (countsChanged)="refreshHotbits()"
-    />
+
     <app-photo-analysis
         [mode]="mode()"
         [available]="available()"

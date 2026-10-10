@@ -18,6 +18,10 @@ export class BroadcastPanel {
     readonly countsChanged = output<void>();
     private readonly hotbits = inject(HotbitStore);
     private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('field');
+    private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
+    readonly immersive = signal(false);
+    readonly fullscreenMessage = signal('');
+    customRate = '';
     readonly selected = signal<number[]>([]);
     readonly session = signal<BroadcastRate[]>([]);
     readonly running = signal(false);
@@ -39,6 +43,7 @@ export class BroadcastPanel {
     private resonanceEnabled = false;
     private sessionMultiplier = 1;
     private wave = 0;
+    private previousOverflow = '';
 
     constructor() {
         effect(() => {
@@ -51,9 +56,37 @@ export class BroadcastPanel {
             }
         };
         document.addEventListener('visibilitychange', hidden);
+        const escape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && this.immersive()) {
+                this.closeStage();
+            } else if (event.key === 'Tab' && this.immersive()) {
+                const buttons = this.stage()?.nativeElement.querySelectorAll<HTMLButtonElement>('button');
+                if (buttons?.length) {
+                    const first = buttons[0];
+                    const last = buttons[buttons.length - 1];
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+        };
+        const fullscreenChanged = () => {
+            if (!document.fullscreenElement && this.immersive()) {
+                this.closeStage();
+            }
+        };
+        document.addEventListener('keydown', escape);
+        document.addEventListener('fullscreenchange', fullscreenChanged);
         inject(DestroyRef).onDestroy(() => {
             this.stop();
+            this.closeStage();
             document.removeEventListener('visibilitychange', hidden);
+            document.removeEventListener('keydown', escape);
+            document.removeEventListener('fullscreenchange', fullscreenChanged);
         });
     }
 
@@ -67,11 +100,59 @@ export class BroadcastPanel {
         return this.session().reduce((sum, rate) => sum + rate.resonances, 0);
     }
 
-    start(all = false): void {
+    remaining(): number {
+        return Math.max(0, Math.ceil(this.duration() - this.elapsed()));
+    }
+
+    startCustom(): void {
+        const name = this.customRate.trim();
+        if (name) {
+            this.start(false, [{ name, originalIndex: -1, gv: this.targetGv() ?? 0, energeticScore: 0 }]);
+        }
+    }
+
+    openStage(): void {
+        const stage = this.stage()?.nativeElement;
+        if (!stage || this.immersive()) {
+            return;
+        }
+        this.previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        this.immersive.set(true);
+        this.fullscreenMessage.set('');
+        if (stage.requestFullscreen) {
+            // Request during the initiating tap so mobile browsers preserve user activation.
+            stage.requestFullscreen({ navigationUI: 'hide' }).catch(() => {
+                if (this.immersive()) {
+                    this.fullscreenMessage.set('Expanded view active. This browser keeps its system controls visible.');
+                }
+            });
+        } else {
+            this.fullscreenMessage.set('Expanded view active. This browser keeps its system controls visible.');
+        }
+        setTimeout(() => stage.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true }));
+    }
+
+    closeStage(): void {
+        if (!this.immersive()) {
+            return;
+        }
+        this.immersive.set(false);
+        document.body.style.overflow = this.previousOverflow;
+        if (document.fullscreenElement === this.stage()?.nativeElement) {
+            document.exitFullscreen().catch(() => {});
+        }
+        this.stage()
+            ?.nativeElement.closest('section')
+            ?.querySelector<HTMLButtonElement>('.launch-actions button')
+            ?.focus({ preventScroll: true });
+    }
+
+    start(all = false, custom?: AnalysisResult[]): void {
         if (this.running() || this.blocked() || document.hidden || this.targetGv() === null) {
             return;
         }
-        const rates = this.results().filter((rate) => all || this.selected().includes(rate.originalIndex));
+        const rates = custom ?? this.results().filter((rate) => all || this.selected().includes(rate.originalIndex));
         if (!rates.length) {
             return;
         }
@@ -96,6 +177,7 @@ export class BroadcastPanel {
         this.running.set(true);
         this.busyChange.emit(true);
         this.status.set('Broadcasting');
+        this.openStage();
         const token = ++this.generation;
         this.tick(token);
     }
@@ -189,14 +271,24 @@ export class BroadcastPanel {
         if (!canvas || !context) {
             return;
         }
-        const width = canvas.width;
-        const height = canvas.height;
+        const bounds = canvas.getBoundingClientRect();
+        const width = bounds.width || 640;
+        const height = bounds.height || 360;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        const pixelWidth = Math.round(width * pixelRatio);
+        const pixelHeight = Math.round(height * pixelRatio);
+        if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+            canvas.width = pixelWidth;
+            canvas.height = pixelHeight;
+        }
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
         // Visual randomness is independent of the stored hotbits used for resonance checks.
         const color = () => `hsla(${Math.random() * 360}, 90%, 65%, .65)`;
         context.fillStyle = 'rgba(9, 5, 28, .09)';
         context.fillRect(0, 0, width, height);
         context.strokeStyle = color();
-        for (const radius of [120, 110, 100]) {
+        const cardRadius = Math.min(width, height) * 0.3;
+        for (const radius of [cardRadius, cardRadius - 10, cardRadius - 20]) {
             context.beginPath();
             context.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
             context.stroke();

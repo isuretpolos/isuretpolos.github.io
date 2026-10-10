@@ -9,6 +9,39 @@ const rates = [
 ];
 
 describe('Canvas broadcaster', () => {
+    it('broadcasts a typed custom signature without analysis and opens the fullscreen stage', () => {
+        const fixture = TestBed.createComponent(BroadcastPanel);
+        fixture.componentRef.setInput('targetGv', 500);
+        fixture.detectChanges();
+        const panel = fixture.componentInstance;
+        vi.spyOn(panel as any, 'tick').mockImplementation(() => {});
+        panel.customRate = '  Custom intention  ';
+        panel.startCustom();
+        expect(panel.session().map((rate) => rate.name)).toEqual(['Custom intention']);
+        expect(panel.immersive()).toBe(true);
+        expect(document.body.style.overflow).toBe('hidden');
+        fixture.detectChanges();
+        expect(fixture.nativeElement.querySelector('.broadcast-stage.immersive')).toBeTruthy();
+        panel.stop();
+        expect(panel.immersive()).toBe(true);
+        panel.closeStage();
+        expect(document.body.style.overflow).not.toBe('hidden');
+        fixture.destroy();
+    });
+
+    it('requests fullscreen with hidden navigation and restores the workspace on Escape', () => {
+        const fixture = TestBed.createComponent(BroadcastPanel);
+        fixture.detectChanges();
+        const stage = fixture.nativeElement.querySelector('.broadcast-stage') as HTMLElement;
+        const request = vi.fn().mockResolvedValue(undefined);
+        stage.requestFullscreen = request;
+        fixture.componentInstance.openStage();
+        expect(request).toHaveBeenCalledWith({ navigationUI: 'hide' });
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(fixture.componentInstance.immersive()).toBe(false);
+        fixture.destroy();
+    });
+
     it('repeats for ten seconds below baseline and finishes when GV reaches it', () => {
         const hotbits = { targetMeasurement: vi.fn().mockResolvedValueOnce(400).mockResolvedValueOnce(500) };
         TestBed.configureTestingModule({ providers: [{ provide: HotbitStore, useValue: hotbits }] });

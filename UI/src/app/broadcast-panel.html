@@ -1,64 +1,150 @@
-<section class="card" aria-labelledby="broadcast-heading">
-    <h2 id="broadcast-heading">5. Broadcast</h2>
-    <p>Target GV: {{ targetGv() ?? 'Check target GV before analysis' }}</p>
+<section class="broadcast-card" aria-labelledby="broadcast-heading">
+    <header class="heading">
+        <span class="step-badge">5</span>
+        <div>
+            <p class="eyebrow">SIGNATURE · TIME · RESONANCE</p>
+            <h2 id="broadcast-heading">Broadcast</h2>
+        </div>
+        <span class="gv-chip">Target GV <strong>{{ targetGv() ?? '—' }}</strong></span>
+    </header>
     <fieldset [disabled]="running() || blocked()">
-        <legend>Rates to broadcast</legend>
-        @for (rate of results(); track rate.originalIndex) {
-        <label class="rate"
-            ><input
-                type="checkbox"
-                [checked]="selected().includes(rate.originalIndex)"
-                (change)="toggle(rate.originalIndex)"
-            />{{ rate.name }} · GV {{ rate.gv }}</label
-        >
-        } @empty {
-        <p>Analyze a rate list first.</p>
+        <legend class="sr-only">Broadcast setup</legend>
+        <div class="setup-grid">
+            <div class="rate-picker">
+                <div class="section-title">
+                    <h3>Choose your signatures</h3>
+                    <span>{{ selected().length }} selected</span>
+                </div>
+                <div class="rate-list">
+                    @for (rate of results(); track rate.originalIndex) {
+                    <label class="rate-option" [class.chosen]="selected().includes(rate.originalIndex)">
+                        <input
+                            type="checkbox"
+                            [checked]="selected().includes(rate.originalIndex)"
+                            (change)="toggle(rate.originalIndex)"
+                        />
+                        <span>{{ rate.name }}</span><small>GV {{ rate.gv }}</small>
+                    </label>
+                    } @empty {
+                    <p class="empty">Analyze a list, or enter your own signature below.</p>
+                    }
+                </div>
+                <label class="input-label" for="custom-rate">Custom rate / intention</label>
+                <div class="custom-entry">
+                    <input
+                        id="custom-rate"
+                        type="text"
+                        maxlength="500"
+                        [(ngModel)]="customRate"
+                        placeholder="Type a rate or intention…"
+                    />
+                    <button
+                        class="secondary"
+                        (click)="startCustom()"
+                        [disabled]="!customRate.trim() || targetGv() === null"
+                    >
+                        Broadcast Custom
+                    </button>
+                </div>
+                <p class="hint">Custom rates can be broadcast independently of the analysis.</p>
+            </div>
+            <div class="settings">
+                <div class="number-fields">
+                    <label class="input-label"
+                        >Duration <span>seconds</span><input type="number" min="1" max="86400" [(ngModel)]="seconds"
+                    /></label>
+                    <label class="input-label"
+                        >Multiplier<input type="number" min="1" max="1000" [(ngModel)]="multiplier"
+                    /></label>
+                </div>
+                <label class="setting"
+                    ><input type="checkbox" [(ngModel)]="delta" /><span
+                        ><strong>GV-based duration</strong
+                        ><small>Subtract target GV when it is lower than the entered seconds.</small></span
+                    ></label
+                >
+                <label class="setting"
+                    ><input type="checkbox" [(ngModel)]="resonance" /><span
+                        ><strong>Resonance detection</strong
+                        ><small>Check each rate using fresh stored hotbits.</small></span
+                    ></label
+                >
+                <label class="setting"
+                    ><input type="checkbox" [(ngModel)]="counterCheck" /><span
+                        ><strong>Repeat until target GV</strong
+                        ><small>Recheck after each cycle. Continue in 10-second cycles below target.</small></span
+                    ></label
+                >
+            </div>
+        </div>
+        @if (targetGv() === null) {
+        <p class="notice">Check target GV in step 3 to enable broadcasting.</p>
         }
-        <label>Duration (seconds)<input type="number" min="1" max="86400" [(ngModel)]="seconds" /></label>
-        <label>Multiplier<input type="number" min="1" max="1000" [(ngModel)]="multiplier" /></label>
-        <label><input type="checkbox" [(ngModel)]="delta" />Use GV delta duration</label>
-        <p>
-            When target GV is lower than the entered seconds, subtract it from the duration; otherwise use the entered
-            seconds.
-        </p>
-        <label><input type="checkbox" [(ngModel)]="resonance" />Check resonance with stored hotbits</label>
-        <label
-            ><input type="checkbox" [(ngModel)]="counterCheck" />Recheck GV after broadcasting; repeat for 10 seconds
-            until GV reaches the starting target</label
-        >
-        <div class="actions">
-            <button (click)="start()" [disabled]="!selected().length || targetGv() === null">
-                Broadcast Selected ({{ selected().length }})
+        <div class="launch-actions">
+            <button class="primary" (click)="start()" [disabled]="!selected().length || targetGv() === null">
+                Broadcast Selected <span>{{ selected().length }}</span>
             </button>
-            <button (click)="start(true)" [disabled]="!results().length || targetGv() === null">Broadcast All</button>
+            <button class="secondary" (click)="start(true)" [disabled]="!results().length || targetGv() === null">
+                Broadcast All
+            </button>
         </div>
     </fieldset>
-    <canvas #field width="640" height="360" aria-label="Animated broadcast signatures and resonance waves"></canvas>
-    @if (running()) {
-    <progress [value]="elapsed()" [max]="duration()" aria-label="Broadcast progress"></progress>
-    <p>Cycle {{ cycles() }} · {{ elapsed().toFixed(1) }} / {{ duration() }} seconds</p>
-    <button (click)="stop()">Stop Broadcast</button>
-    }
-    <p role="status">{{ status() }}</p>
-    @if (lastGv() !== null) {
-    <p>Latest target GV: {{ lastGv() }}</p>
-    } @if (session().length) {
-    <h3>Resonances: {{ total() }}</h3>
-    <p>Counts remain visible after completion or interruption.</p>
-    <ul>
-        @for (rate of session(); track rate.originalIndex) {
-        <li>
-            {{ rate.name }}: <strong>{{ rate.resonances }}</strong>
-            @if (rate.events.length) {
-            <details>
-                <summary>Resonance times</summary>
-                @for (time of rate.events; track $index) {
-                <p>{{ time }}</p>
-                }
-            </details>
+    <div
+        #stage
+        class="broadcast-stage"
+        [class.immersive]="immersive()"
+        [attr.role]="immersive() ? 'dialog' : null"
+        [attr.aria-modal]="immersive() ? 'true' : null"
+        aria-label="Broadcast field"
+    >
+        <canvas #field width="640" height="360" aria-label="Animated broadcast signatures and resonance waves"></canvas>
+        <div class="stage-top">
+            <span class="live-label" [class.active]="running()"
+                ><i></i>{{ running() ? 'BROADCASTING' : session().length ? 'SESSION ENDED' : 'BROADCAST FIELD' }}</span
+            >
+            @if (immersive()) { <button class="glass-button" (click)="closeStage()">Return to workspace</button> } @if
+            (!immersive() && running()) { <button class="glass-button" (click)="openStage()">Fullscreen</button> }
+        </div>
+        <div class="stage-bottom">
+            @if (session().length) {
+            <p class="signature-line">
+                {{ session()[0].name }}@if (session().length > 1) { <span> + {{ session().length - 1 }} rates</span> }
+            </p>
+            <div class="session-metrics">
+                <span><small>RESONANCES</small><strong>{{ total() }}</strong></span
+                ><span><small>CYCLE</small><strong>{{ cycles() }}</strong></span
+                ><span><small>REMAINING</small><strong>{{ remaining() }}s</strong></span>
+            </div>
+            } @if (running()) {
+            <progress [value]="elapsed()" [max]="duration()" aria-label="Broadcast progress"></progress>
+            <div class="run-actions">
+                <span>{{ status() }}</span><button class="stop-button" (click)="stop()">Stop Broadcast</button>
+            </div>
+            } @else {
+            <p class="stage-status" role="status">{{ status() }}</p>
+            } @if (fullscreenMessage()) {
+            <p class="fullscreen-note">{{ fullscreenMessage() }}</p>
             }
-        </li>
+        </div>
+    </div>
+    @if (session().length) {
+    <div class="session-summary">
+        <div class="section-title">
+            <h3>Session results</h3>
+            <span>{{ total() }} resonances</span>
+        </div>
+        @if (lastGv() !== null) {
+        <p class="hint">Latest target GV: {{ lastGv() }}</p>
+        } @for (rate of session(); track rate.originalIndex) {
+        <details class="resonance-row">
+            <summary><span>{{ rate.name }}</span><strong>{{ rate.resonances }}</strong></summary>
+            @for (time of rate.events; track $index) {
+            <p class="hint">{{ time }}</p>
+            } @empty {
+            <p class="hint">No resonance recorded.</p>
+            }
+        </details>
         }
-    </ul>
+    </div>
     }
 </section>
