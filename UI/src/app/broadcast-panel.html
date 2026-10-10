@@ -117,7 +117,9 @@
             (!immersive() && running()) { <button class="glass-button" (click)="openStage()">Fullscreen</button> }
         </div>
         <div class="stage-bottom">
-            @if (renderMessage()) {
+            @if (running() && immersive() && wakeLock.message()) {
+            <p class="fullscreen-note">{{ wakeLock.message() }}</p>
+            } @if (renderMessage()) {
             <p class="fullscreen-note">{{ renderMessage() }}</p>
             } @if (randomFallback()) {
             <p class="fullscreen-note">Unseeded random active · broadcast continues</p>

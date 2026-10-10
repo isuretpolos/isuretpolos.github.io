@@ -1,4 +1,4 @@
 {
-    "version": "1.11.2",
-    "description": "Keep fallback broadcasts independent of storage and rendering interruptions"
+    "version": "1.12.0",
+    "description": "Keep the smartphone screen awake during fullscreen broadcasting"
 }

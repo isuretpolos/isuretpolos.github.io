@@ -4,10 +4,12 @@ import { AnalysisResult, calculateGv } from './analysis';
 import { HotbitStore } from './hotbit-store';
 import { BroadcastRate, broadcastDuration, resonanceHits, unseededDraws } from './broadcast';
 import { ClearFlash } from './clear-flash';
+import { BroadcastWakeLock } from './broadcast-wake-lock';
 
 @Component({
     selector: 'app-broadcast',
     imports: [FormsModule],
+    providers: [BroadcastWakeLock],
     templateUrl: './broadcast-panel.html',
     styleUrl: './broadcast-panel.css',
 })
@@ -19,6 +21,7 @@ export class BroadcastPanel {
     readonly countsChanged = output<void>();
     private readonly hotbits = inject(HotbitStore);
     readonly clearFlash = inject(ClearFlash);
+    readonly wakeLock = inject(BroadcastWakeLock);
     private readonly canvas = viewChild<ElementRef<HTMLCanvasElement>>('field');
     private readonly stage = viewChild<ElementRef<HTMLElement>>('stage');
     readonly immersive = signal(false);
@@ -139,6 +142,7 @@ export class BroadcastPanel {
         this.previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         this.immersive.set(true);
+        this.wakeLock.setEnabled(this.running());
         this.fullscreenMessage.set('');
         if (stage.requestFullscreen) {
             // Request during the initiating tap so mobile browsers preserve user activation.
@@ -158,6 +162,7 @@ export class BroadcastPanel {
             return;
         }
         this.immersive.set(false);
+        this.wakeLock.setEnabled(false);
         document.body.style.overflow = this.previousOverflow;
         if (document.fullscreenElement === this.stage()?.nativeElement) {
             document.exitFullscreen().catch(() => {});
@@ -200,11 +205,13 @@ export class BroadcastPanel {
         this.busyChange.emit(true);
         this.status.set('Broadcasting');
         this.openStage();
+        this.wakeLock.setEnabled(this.immersive());
         const token = ++this.generation;
         this.tick(token);
     }
 
     stop(message = 'Broadcast stopped.'): void {
+        this.wakeLock.setEnabled(false);
         ++this.generation;
         clearTimeout(this.timer);
         if (this.running()) {
