@@ -13,6 +13,7 @@ interface Batch {
 
 @Injectable({ providedIn: 'root' })
 export class HotbitStore {
+    trngOnly = false;
     private database?: Promise<IDBDatabase>;
 
     private open(): Promise<IDBDatabase> {
@@ -67,13 +68,86 @@ export class HotbitStore {
         );
     }
 
+    remoteRecords<T>(): Promise<T[]> {
+        return this.open().then(
+            (database) =>
+                new Promise<T[]>((resolve, reject) => {
+                    const transaction = database.transaction('metadata');
+                    const request = transaction.objectStore('metadata').getAll();
+                    transaction.oncomplete = () =>
+                        resolve(request.result.filter((value) => value?.remoteRequest) as T[]);
+                    transaction.onabort = () => reject(transaction.error);
+                }),
+        );
+    }
+
+    saveRemote(record: { remoteRequest: string }): Promise<void> {
+        return this.open().then(
+            (database) =>
+                new Promise<void>((resolve, reject) => {
+                    const transaction = database.transaction('metadata', 'readwrite');
+                    transaction.objectStore('metadata').put(record, 'remote:' + record.remoteRequest);
+                    transaction.oncomplete = () => resolve();
+                    transaction.onabort = () => reject(transaction.error);
+                }),
+        );
+    }
+
+    importRemote(
+        record: { remoteRequest: string; allocationId?: string; endpoint?: string },
+        bytes: Uint8Array,
+        ceilingBytes = 16000000,
+    ): Promise<void> {
+        return this.open().then(
+            (database) =>
+                new Promise<void>((resolve, reject) => {
+                    const transaction = database.transaction(['batches', 'metadata'], 'readwrite');
+                    const metadata = transaction.objectStore('metadata');
+                    const imported = metadata.get('allocation:' + (record.endpoint ?? '') + ':' + record.allocationId);
+                    const batches = transaction.objectStore('batches').getAll();
+                    const tail = metadata.get('byteTail');
+                    tail.onsuccess = () => {
+                        if (imported.result) {
+                            return;
+                        }
+                        const previous = (tail.result ?? new Uint8Array()) as Uint8Array;
+                        const storedBytes = (batches.result as Batch[]).reduce(
+                            (sum, batch) => sum + (batch.words.length - batch.cursor) * 4,
+                            0,
+                        );
+                        if (storedBytes + previous.length + bytes.length > ceilingBytes) {
+                            transaction.abort();
+                            return;
+                        }
+                        const combined = new Uint8Array(previous.length + bytes.length);
+                        combined.set(previous);
+                        combined.set(bytes, previous.length);
+                        const length = Math.floor(combined.length / 4) * 4;
+                        if (length) {
+                            const view = new DataView(combined.buffer);
+                            const words = new Uint32Array(length / 4);
+                            for (let index = 0; index < words.length; index++) {
+                                words[index] = view.getUint32(index * 4, true);
+                            }
+                            transaction.objectStore('batches').add({ words, cursor: 0 });
+                        }
+                        metadata.put(combined.slice(length), 'byteTail');
+                        metadata.put(true, 'allocation:' + (record.endpoint ?? '') + ':' + record.allocationId);
+                        metadata.put({ ...record, imported: true }, 'remote:' + record.remoteRequest);
+                    };
+                    transaction.oncomplete = () => resolve();
+                    transaction.onabort = () => reject(transaction.error ?? new Error('Hotbit import failed.'));
+                }),
+        );
+    }
+
     analyze(rates: Rate[]): Promise<AnalysisResult[]> {
         return this.consume((draws) => {
             const required = rates.length * 10 + Math.min(20, rates.length) * 3;
-            if (draws.available < Math.ceil(required * 0.2)) {
+            if (draws.available < (this.trngOnly ? required : Math.ceil(required * 0.2))) {
                 throw new HotbitsExhausted();
             }
-            return analyzeRates(rates, new SpreadDraws(required).bind(draws));
+            return analyzeRates(rates, this.trngOnly ? draws : new SpreadDraws(required).bind(draws));
         });
     }
 
@@ -87,7 +161,15 @@ export class HotbitStore {
 
     targetMeasurement(onFallback?: () => void, spread?: SpreadDraws): Promise<number> {
         return this.consume((draws) =>
-            calculateGv(spread ? spread.bind(draws) : onFallback ? broadcastingDraws(draws, onFallback) : draws),
+            calculateGv(
+                this.trngOnly
+                    ? draws
+                    : spread
+                      ? spread.bind(draws)
+                      : onFallback
+                        ? broadcastingDraws(draws, onFallback)
+                        : draws,
+            ),
         );
     }
 
@@ -98,7 +180,11 @@ export class HotbitStore {
         spread?: SpreadDraws,
     ): Promise<boolean[]> {
         return this.consume((draws) =>
-            resonanceHits(count, multiplier, spread ? spread.bind(draws) : broadcastingDraws(draws, onFallback)),
+            resonanceHits(
+                count,
+                multiplier,
+                this.trngOnly ? draws : spread ? spread.bind(draws) : broadcastingDraws(draws, onFallback),
+            ),
         );
     }
 

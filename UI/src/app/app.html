@@ -129,6 +129,9 @@
                 </div>
                 <span class="camera-state" [class.live]="camera.collecting()"><i></i>{{ cameraLabel() }}</span>
             </div>
+            <app-hotbits-sources
+                [analysisBusy]="analyzing() || checkingTarget() || broadcastBusy() || liveBusy() || photoBusy()"
+            />
             @if (camera.collecting()) {
             <button class="primary full" (click)="camera.stop()"><app-icon name="camera" />Stop &amp; Save</button>
             @if (collectionWakeLock.message()) {

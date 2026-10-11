@@ -1,3 +1,4 @@
+import { HotbitsSources } from './hotbits-sources';
 import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
 import { BroadcastWakeLock } from './broadcast-wake-lock';
 import { Disclaimer } from './disclaimer';
@@ -20,7 +21,7 @@ import { AnalysisHistory, HistoryEntry, analysisCsv, analysisAiText } from './an
 @Component({
     selector: 'app-root',
     providers: [BroadcastWakeLock],
-    imports: [FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel, Disclaimer],
+    imports: [HotbitsSources, FormsModule, Icon, PhotoAnalysis, LiveAnalysis, PwaInstall, BroadcastPanel, Disclaimer],
     templateUrl: './app.html',
     styleUrl: './app.css',
 })
@@ -90,7 +91,8 @@ export class App {
     readonly hotbitReady = signal(false);
     private writes: Promise<void> = Promise.resolve();
     readonly required = (): number => this.rates().length * 10 + Math.min(20, this.rates().length) * 3;
-    readonly minimumRequired = (): number => Math.ceil(this.required() * 0.2);
+    readonly minimumRequired = (): number =>
+        this.hotbits.trngOnly ? this.required() : Math.ceil(this.required() * 0.2);
     readonly mode = signal<'simple' | 'advanced'>('simple');
     readonly expandedResults = signal(false);
     readonly storageStatus = signal('Browser-managed local storage');
@@ -197,6 +199,8 @@ export class App {
             window.removeEventListener('pagehide', stop);
             document.removeEventListener('visibilitychange', hidden);
         });
+        const inventoryTimer = setInterval(() => this.refreshHotbits(), 3000);
+        inject(DestroyRef).onDestroy(() => clearInterval(inventoryTimer));
         this.refreshHotbits();
         try {
             this.saved.set(this.store.load());

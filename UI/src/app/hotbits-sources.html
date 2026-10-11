@@ -1,0 +1,74 @@
+<details class="card">
+    <summary>Hotbits · Sources · Connect AetherOnePi</summary>
+    <p>
+        Usable local bytes: {{ inventory.availableBytes() }} ({{ formatBytes(inventory.availableBytes()) }}). All
+        analyses use this shared offline pool.
+    </p>
+    <label
+        >Refill source
+        <select [(ngModel)]="inventory.source">
+            <option value="local">Local camera / store</option>
+            <option value="remote">AetherOnePi via LAN</option>
+        </select></label
+    >
+    <label
+        ><input type="checkbox" [(ngModel)]="inventory.store.trngOnly" [disabled]="analysisBusy()" /> TRNG-only: require
+        stored entropy for every draw</label
+    >
+    <p>
+        Change analysis mode only between tasks. Source selection controls refill; cached bytes remain usable offline.
+    </p>
+    @if (!connection.connected()) {
+    <button type="button" (click)="scan()" [disabled]="pairing()">Scan QR</button>
+    <button type="button" (click)="stopScan()">Cancel scan</button>
+    <video #qrVideo muted playsinline [hidden]="!scanning()" style="max-width: 100%; width: 320px"></video>
+    <label
+        >QR JSON
+        <textarea [(ngModel)]="payload" [disabled]="pairing()" placeholder="Paste AetherOnePi QR JSON"></textarea>
+    </label>
+    <button type="button" (click)="validate()" [disabled]="pairing()">Inspect host</button>
+    @if (preview(); as qr) {
+    <p>Send pairing code to {{ qr.endpoint }}? Confirm this is your trusted LAN bridge, especially for public hosts.</p>
+    <button type="button" (click)="pair()" [disabled]="pairing()">Confirm pairing with {{ qr.endpoint }}</button>
+    } } @else {
+    <p>Connected: {{ connection.host() }} · Latest sync: {{ connection.latestSync() || 'Not yet synced' }}</p>
+    @if (connection.status(); as status) {
+    <p>
+        {{ status.source }} · {{ status.generator }} · Remote bytes: {{ status.availableBytes }} ({{
+        formatBytes(status.availableBytes) }}) · Generating: {{ status.generating }}
+    </p>
+    }
+    <button type="button" (click)="refresh()" [disabled]="inventory.busy()">Refresh status / Retry</button>
+    <button type="button" (click)="download()" [disabled]="inventory.busy() || inventory.source !== 'remote'">
+        Download now / Resume
+    </button>
+    <button type="button" (click)="inventory.cancel()">Stop transfer</button>
+    <button type="button" (click)="disconnect()">Disconnect locally</button>
+    <label><input type="checkbox" [(ngModel)]="inventory.autoRefill" /> Auto refill while active</label>
+    <label
+        >Local target (bytes) <input type="number" [(ngModel)]="inventory.targetBytes" [disabled]="inventory.busy()"
+    /></label>
+    <label
+        >Low watermark (bytes) <input type="number" [(ngModel)]="inventory.lowWatermark" [disabled]="inventory.busy()"
+    /></label>
+    <label
+        >Batch size (bytes, capped by server)
+        <input type="number" [(ngModel)]="inventory.batchBytes" [disabled]="inventory.busy()"
+    /></label>
+    <label
+        >Storage ceiling (bytes, max 16 MB)
+        <input type="number" [(ngModel)]="inventory.ceilingBytes" [disabled]="inventory.busy()"
+    /></label>
+    }
+    <p>
+        Tokens are saved in browser storage, not an OS-protected vault. Disconnect removes local authentication; API v1
+        has no server revocation endpoint.
+    </p>
+    <p>
+        Requires the same LAN, trusted HTTPS certificate and server CORS permission for this app's origin. Auto refill
+        stops when hidden. Cached bytes work offline.
+    </p>
+    @if (error() || inventory.error()) {
+    <p role="alert">{{ error() || inventory.error() }}</p>
+    }
+</details>
