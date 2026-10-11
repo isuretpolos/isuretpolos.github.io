@@ -242,12 +242,7 @@ export class BroadcastPanel {
             this.finishCycle(token);
             return;
         }
-        const randomHits = () => {
-            if (this.hotbits.trngOnly) {
-                throw new Error('TRNG-only supply unavailable.');
-            }
-            return resonanceHits(this.session().length, this.sessionMultiplier, unseededDraws);
-        };
+        const randomHits = () => resonanceHits(this.session().length, this.sessionMultiplier, unseededDraws);
         const sample = !this.resonanceEnabled
             ? Promise.resolve(this.session().map(() => false))
             : this.storageFailed
@@ -263,10 +258,7 @@ export class BroadcastPanel {
                         },
                         this.spread,
                     )
-                    .catch((error) => {
-                        if (this.hotbits.trngOnly) {
-                            throw error;
-                        }
+                    .catch(() => {
                         // Broadcasting can continue even if browser storage becomes unavailable.
                         this.storageFailed = true;
                         if (token === this.generation) {
@@ -322,10 +314,7 @@ export class BroadcastPanel {
                     this.randomFallback.set(true);
                 }
             }, this.spread)
-            .catch((error) => {
-                if (this.hotbits.trngOnly) {
-                    throw error;
-                }
+            .catch(() => {
                 if (token === this.generation) {
                     this.randomFallback.set(true);
                 }
