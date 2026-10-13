@@ -1,0 +1,19 @@
+{
+    "schemaVersion": "1.0",
+    "device": {"id": "classic-radionics", "name": "Classic Radionics", "version": "1.0.0"},
+    "model": "procedural",
+    "controlTemplates": [
+        {"type": "knob", "prefix": "knob10_", "axis": "Z", "minAngle": -135, "maxAngle": 135, "minValue": 0, "maxValue": 9, "step": 1, "defaultValue": 0, "stateFrom": "objectName", "dragPixelsPerStep": 24},
+        {"type": "knob", "prefix": "knob135_", "axis": "Z", "minAngle": -135, "maxAngle": 135, "minValue": 0, "maxValue": 100, "step": 1, "stateFrom": "suffix"},
+        {"type": "switch", "prefix": "switch_", "axis": "X", "offAngle": -25, "onAngle": 25, "stateFrom": "suffix"},
+        {"type": "button", "prefix": "button_", "stateFrom": "suffix", "mode": "momentary"}
+    ],
+    "initialState": {"power": false, "broadcast": false, "diagnose": false, "gv": 0, "hotbits": 0},
+    "rateGroups": [{"id": "main", "members": ["knob10_1", "knob10_2", "knob10_3"], "separator": "-", "output": "rate.main"}],
+    "bindings": [{"object": "led_broadcast", "target": "led", "when": "power && broadcast"}],
+    "cameras": {"default": "TOP_DOWN_FULLVIEW_camera", "manual": "MANUAL_CAM_camera", "target": [0, 0, 0]},
+    "canvasDefaults": {"resolution": [512, 256], "color": "#ffbe74", "fontSize": 130, "fontFamily": "monospace"},
+    "broadcast": {"rateMode": "snapshot"},
+    "broadcastSurfaces": [{"object": "broadcastCanvas", "source": "broadcast.main", "resolution": [512, 512], "fps": 24, "enabledWhen": "power && broadcast"}],
+    "animations": {"power": {"on": "POWER_ON_anim", "off": "POWER_OFF_anim"}, "broadcast": {"loop": "BROADCAST_ACTIVE_LOOP_anim"}}
+}

@@ -1,0 +1,68 @@
+{
+  "configVersion": 1,
+  "timestamp": 1791909014834,
+  "index": "/ui3d/index.html",
+  "assetGroups": [
+    {
+      "name": "ui3d-shell",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "cacheQueryOptions": {
+        "ignoreVary": true
+      },
+      "urls": [
+        "/ui3d/AetherOnePy-LICENSE.txt",
+        "/ui3d/decoders/DRACO-LICENSE.txt",
+        "/ui3d/decoders/MESHOPT-LICENSE.txt",
+        "/ui3d/decoders/THREE-LICENSE.txt",
+        "/ui3d/decoders/draco/draco_decoder.js",
+        "/ui3d/decoders/draco/draco_decoder.wasm",
+        "/ui3d/decoders/draco/draco_wasm_wrapper.js",
+        "/ui3d/device.schema.json",
+        "/ui3d/devices/classic-demo/device.glb",
+        "/ui3d/devices/classic-demo/device.json",
+        "/ui3d/devices/classic-demo/roundtrip-report.json",
+        "/ui3d/icons/icon-192.png",
+        "/ui3d/icons/icon-512.png",
+        "/ui3d/index.html",
+        "/ui3d/main-ESYUJYUW.js",
+        "/ui3d/manifest.webmanifest",
+        "/ui3d/styles-3LODNGQM.css",
+        "/ui3d/version.json"
+      ],
+      "patterns": []
+    }
+  ],
+  "dataGroups": [],
+  "hashTable": {
+    "/ui3d/AetherOnePy-LICENSE.txt": "e4c85b95867b3e88922664aba2c95e083caf26a6",
+    "/ui3d/decoders/DRACO-LICENSE.txt": "623115fff0087fad82d8c7a34b67dc8de932cf61",
+    "/ui3d/decoders/MESHOPT-LICENSE.txt": "6dd4d83d848bcec36919d099a91730cbf2b729e9",
+    "/ui3d/decoders/THREE-LICENSE.txt": "7293d37daed3d6714b36d830e30c9614a5e268ec",
+    "/ui3d/decoders/draco/draco_decoder.js": "eb0c7af7e0c05f3554a29d098e0c1a5ebf29b3fc",
+    "/ui3d/decoders/draco/draco_decoder.wasm": "11866a8962e6b07cbb669b7931dbb466afa2bd9d",
+    "/ui3d/decoders/draco/draco_wasm_wrapper.js": "94c57ad1f8ec5d7fbdd2fa6ee3e6b20198c3381d",
+    "/ui3d/device.schema.json": "b41d95e45b136157b8163b75e553303ef3305cd6",
+    "/ui3d/devices/classic-demo/device.glb": "01d8e9290274ef248a801dc076b566c0fb386651",
+    "/ui3d/devices/classic-demo/device.json": "6e7ed3067a25577925b7f371ea782462db0b056c",
+    "/ui3d/devices/classic-demo/roundtrip-report.json": "25e9ca4177cf5ebb74a6485cde8d5efca1f0d0d6",
+    "/ui3d/icons/icon-192.png": "e74705b90ccf48e2e8c8691ea496ce834f9004d4",
+    "/ui3d/icons/icon-512.png": "cc27f03bab68b01f3596a79bab4f6b86a4bbe10a",
+    "/ui3d/index.html": "8ae7683915854e24b21058b56f2fd5be1ff4ba91",
+    "/ui3d/main-ESYUJYUW.js": "e391d052353aa8f7324c9b9b601bfc4f7c23fa30",
+    "/ui3d/manifest.webmanifest": "a7b67275acd231569cc826bc6b7809ad4006cfe1",
+    "/ui3d/styles-3LODNGQM.css": "b3bca96b1d04fa82da1416425177e81604857988",
+    "/ui3d/version.json": "09b02755e4b1af34c7787d609923be0c1dc4e4f1"
+  },
+  "navigationUrls": [
+    {
+      "positive": true,
+      "regex": "^\\/.*$"
+    },
+    {
+      "positive": false,
+      "regex": "^\\/(?:.+\\/)?[^/]*\\.[^/]*$"
+    }
+  ],
+  "navigationRequestStrategy": "performance"
+}

@@ -1,0 +1,39 @@
+{
+    "name": "radionics-ui3d",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "ng serve --host 127.0.0.1 --port 4300",
+        "check": "tsc --noEmit -p tsconfig.app.json",
+        "test": "vitest run",
+        "prepare:assets": "node scripts/assets.mjs",
+        "build": "npm run prepare:assets && ng build && node scripts/finalize-build.mjs",
+        "deploy": "npm run build && node scripts/publish.mjs",
+        "roundtrip": "node scripts/roundtrip.mjs",
+        "verify:build": "node scripts/verify-build.mjs",
+        "preview": "node scripts/preview.mjs"
+    },
+    "dependencies": {
+        "@angular/common": "22.2.2",
+        "@angular/compiler": "22.2.2",
+        "@angular/core": "22.2.2",
+        "@angular/forms": "22.2.2",
+        "@angular/platform-browser": "22.2.2",
+        "@angular/service-worker": "22.2.2",
+        "ajv": "8.17.1",
+        "rxjs": "7.8.2",
+        "three": "0.186.1",
+        "tslib": "2.8.1"
+    },
+    "devDependencies": {
+        "@angular/build": "22.2.2",
+        "@angular/cli": "22.2.2",
+        "@angular/compiler-cli": "22.2.2",
+        "@angular/pwa": "22.2.2",
+        "@types/three": "0.183.1",
+        "fake-indexeddb": "6.2.5",
+        "typescript": "6.0.3",
+        "vitest": "5.0.3"
+    }
+}

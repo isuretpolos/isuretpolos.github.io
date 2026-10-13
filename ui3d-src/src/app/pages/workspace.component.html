@@ -1,0 +1,51 @@
+<main [class.maximized]="maximized()">
+    <header>
+        <div><span class="eyebrow">RADIONICS / UI3D</span><h1>{{ title() }}</h1></div>
+        <button (click)="toggleFullscreen()">{{ fullscreen() || maximized() ? 'Exit fullscreen' : 'Fullscreen' }}</button>
+    </header>
+    <nav aria-label="Device workspace">
+        <button (click)="camera(false)">Top view</button>
+        <button (click)="camera(true)">Manual camera</button>
+        <button (click)="loadDemo()" [disabled]="busy()">Demo</button>
+        <button (click)="loadDemo(false, true)" [disabled]="busy()">Procedural demo</button>
+        <button (click)="loadDemo(true)" [disabled]="busy() || instanceIds().length >= 2">Add second instance</button>
+        @for (id of instanceIds(); track $index) {
+            <button (click)="selectInstance(id)" [class.selected]="activeId() === id">{{ id }}</button>
+        }
+        <label class="file-button">Import device pair<input type="file" multiple accept=".glb,.json" (change)="importDevice($event)" [disabled]="busy()"></label>
+    </nav>
+    <section class="viewport" #viewport (dragover)="$event.preventDefault()" (drop)="drop($event)" aria-label="3D device viewer"></section>
+    <p class="notice" role="status">{{ busy() ? 'Loading and validating…' : notice() }}</p>
+    <section class="workspace-controls" aria-label="Accessible device controls">
+        @for (entry of controlEntries(); track entry[0]) {
+            @if (entry[1].type === 'knob') {
+                <label class="knob-control">{{ entry[0] }} <output>{{ state()[entry[0]] }}</output>
+                    <input type="range" [min]="entry[1].minValue ?? 0" [max]="entry[1].maxValue ?? 9" [step]="entry[1].step ?? 1"
+                           [value]="state()[entry[0]]" (input)="adjust(entry[0], $event)">
+                </label>
+            } @else if (entry[1].type === 'button') {
+                <button (click)="press(entry[0])">{{ entry[0] }}</button>
+            } @else {
+                <button (click)="toggle(entry[0])" [attr.aria-pressed]="state()[entry[0]]">{{ entry[0] }}: {{ state()[entry[0]] ? 'ON' : 'OFF' }}</button>
+            }
+        }
+        <label>Rate mode <select [value]="mode()" [disabled]="!!state()['broadcast']" (change)="changeMode($event)"><option value="snapshot">SNAPSHOT</option><option value="live">LIVE</option></select></label>
+    </section>
+    <section class="readout" aria-label="Rate signature">
+        <span>Current rate <strong>{{ state()['rate.main'] }}</strong></span>
+        <span>Session <strong>{{ state()['broadcast'] ? state()['broadcast.main'] : 'Stopped' }}</strong> · {{ mode().toUpperCase() }}
+            @if (state()['broadcast'] && mode() === 'snapshot' && signatureChanged()) {<small>Knobs differ from snapshot</small>}
+        </span>
+    </section>
+    <section class="secondary">
+        <div><h2>Local preset</h2><button (click)="save()">Save</button><button (click)="load()">Load</button><button (click)="reset()">Reset</button><button (click)="exportPreset()">Export JSON</button>
+            <label class="file-button">Import preset<input type="file" accept=".json" (change)="importPreset($event)"></label></div>
+        <div><h2>Byte source</h2><button (click)="startWebcam()" [disabled]="webcamActive()">Start webcam</button><button (click)="stopWebcam()">Stop / demo</button>
+            <p>{{ webcamActive() ? 'Experimental webcam' : 'Demo · browser crypto' }} · {{ buffered() }} bytes</p>
+            <small>Webcam bytes are experimental, not verified cryptographic randomness. No frames are uploaded.</small></div>
+    </section>
+    <details><summary>Developer panel · {{ activeId() }}</summary><pre>{{ stateJson() }}</pre>
+        @for (message of diagnostics(); track $index) {<p>{{ message }}</p>}
+    </details>
+    <footer>Drag a knob vertically · select it and use arrows / Home / End · drop a .glb + device.json to import<br>{{ pwaStatus() }}</footer>
+</main>

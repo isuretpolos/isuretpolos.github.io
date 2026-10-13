@@ -1,0 +1,7 @@
+node_modules/
+.angular/
+dist/
+.baseline-ui/
+public/decoders/
+tools/roundtrip-output/
+__pycache__/

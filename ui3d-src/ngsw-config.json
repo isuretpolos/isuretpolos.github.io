@@ -1,0 +1,9 @@
+{
+    "index": "/index.html",
+    "assetGroups": [{
+        "name": "ui3d-shell",
+        "installMode": "prefetch",
+        "resources": {"files": ["/index.html", "/*.js", "/*.css", "/*.txt", "/manifest.webmanifest", "/icons/**", "/devices/**", "/decoders/**", "/device.schema.json", "/version.json"]}
+    }],
+    "navigationUrls": ["/**", "!/**/*.*"]
+}

@@ -1,0 +1,50 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "UI3D device definition",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["schemaVersion", "device", "model", "controlTemplates", "initialState", "rateGroups", "bindings", "broadcast"],
+    "properties": {
+        "schemaVersion": {"const": "1.0"},
+        "device": {
+            "type": "object", "additionalProperties": false, "required": ["id", "name", "version"],
+            "properties": {"id": {"type": "string", "pattern": "^[A-Za-z0-9_-]+$"}, "name": {"type": "string", "minLength": 1}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}
+        },
+        "model": {"type": "string"},
+        "controlTemplates": {"type": "array", "maxItems": 100, "items": {"allOf": [{"$ref": "#/definitions/control"}, {"type": "object", "required": ["type", "prefix"]}]}},
+        "objects": {"type": "object", "additionalProperties": {"$ref": "#/definitions/control"}},
+        "initialState": {"type": "object", "propertyNames": {"pattern": "^[A-Za-z_][A-Za-z0-9_.]*$"}, "additionalProperties": {"type": ["boolean", "number", "string"]}},
+        "rateGroups": {"type": "array", "maxItems": 100, "items": {
+            "type": "object", "additionalProperties": false, "required": ["id", "members", "separator", "output"],
+            "properties": {"id": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"}, "members": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "separator": {"type": "string"}, "output": {"type": "string"}}
+        }},
+        "bindings": {"type": "array", "items": {"$ref": "#/definitions/binding"}},
+        "broadcast": {"type": "object", "additionalProperties": false, "required": ["rateMode"], "properties": {"rateMode": {"enum": ["snapshot", "live"]}}},
+        "cameras": {"type": "object", "additionalProperties": false, "required": ["default", "manual"], "properties": {"default": {"type": "string"}, "manual": {"type": "string"}, "target": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "number"}}}},
+        "canvasDefaults": {"$ref": "#/definitions/style"},
+        "broadcastSurfaces": {"type": "array", "items": {
+            "type": "object", "additionalProperties": false, "required": ["object", "source"],
+            "properties": {"object": {"type": "string"}, "source": {"type": "string"}, "resolution": {"$ref": "#/definitions/resolution"}, "fps": {"type": "number", "minimum": 1, "maximum": 60}, "enabledWhen": {"type": "string"}}
+        }},
+        "animations": {"type": "object", "additionalProperties": {"type": "object", "additionalProperties": false, "properties": {"on": {"type": "string"}, "off": {"type": "string"}, "loop": {"type": "string"}}}},
+        "limits": {"type": "object", "additionalProperties": false, "properties": {"warnModelMB": {"type": "number", "minimum": 1, "maximum": 100}, "maxModelMB": {"type": "number", "minimum": 1, "maximum": 100}}}
+    },
+    "definitions": {
+        "resolution": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "integer", "minimum": 64, "maximum": 2048}},
+        "style": {"type": "object", "additionalProperties": false, "properties": {"resolution": {"$ref": "#/definitions/resolution"}, "color": {"type": "string"}, "fontSize": {"type": "number", "minimum": 8, "maximum": 512}, "fontFamily": {"type": "string"}}},
+        "control": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+                "type": {"enum": ["knob", "switch", "button"]}, "prefix": {"type": "string", "minLength": 1},
+                "stateFrom": {"enum": ["objectName", "suffix"]}, "stateId": {"type": "string"}, "axis": {"enum": ["X", "Y", "Z"]},
+                "minAngle": {"type": "number"}, "maxAngle": {"type": "number"}, "minValue": {"type": "number"}, "maxValue": {"type": "number"}, "step": {"type": "number", "exclusiveMinimum": 0},
+                "defaultValue": {"type": ["number", "boolean", "string"]}, "wrap": {"type": "boolean"}, "dragPixelsPerStep": {"type": "number", "minimum": 1},
+                "offAngle": {"type": "number"}, "onAngle": {"type": "number"}, "mode": {"enum": ["momentary", "toggle"]}, "action": {"enum": ["broadcast.start", "broadcast.stop", "broadcast.toggle", "diagnose.start", "diagnose.stop", "diagnose.toggle", "power.start", "power.stop", "power.toggle"]}
+            }
+        },
+        "binding": {
+            "type": "object", "additionalProperties": false, "required": ["object", "target"],
+            "properties": {"object": {"type": "string"}, "target": {"enum": ["text", "led", "visibility", "surface"]}, "source": {"type": "string"}, "when": {"type": "string", "maxLength": 2048}, "color": {"type": "string"}, "fontSize": {"type": "number", "minimum": 8, "maximum": 512}}
+        }
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "id": "/ui3d/",
+    "name": "Radionics UI3D",
+    "short_name": "UI3D",
+    "start_url": "/ui3d/",
+    "scope": "/ui3d/",
+    "display": "standalone",
+    "background_color": "#17242c",
+    "theme_color": "#17242c",
+    "icons": [
+        {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+        {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+    ]
+}
