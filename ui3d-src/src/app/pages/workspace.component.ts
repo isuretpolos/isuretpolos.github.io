@@ -16,6 +16,7 @@ interface Instance {loaded: LoadedDevice; store: DeviceState; scene: SceneContro
 })
 export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     @ViewChild('viewport', {static: true}) viewport!: ElementRef<HTMLElement>;
+    @ViewChild('fullscreenButton', {static: true}) fullscreenButton!: ElementRef<HTMLButtonElement>;
     private readonly zone = inject(NgZone);
     private readonly loader = new DeviceLoader();
     private readonly bus = new EventBus();
@@ -46,6 +47,7 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
 
     ngAfterViewInit(): void {
         document.addEventListener('fullscreenchange', this.fullscreenChange);
+        document.addEventListener('keydown', this.fullscreenKeyDown);
         this.loadDemo();
         if (!isDevMode() && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(registration => {
@@ -179,10 +181,14 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     }
 
     toggleFullscreen(): void {
-        if (document.fullscreenElement) {
+        const viewer = this.viewport.nativeElement;
+        if (this.maximized()) {
+            this.maximized.set(false);
+            this.fullscreenButton.nativeElement.focus();
+        } else if (document.fullscreenElement === viewer) {
             document.exitFullscreen().catch(error => this.report(error));
-        } else if (document.fullscreenEnabled && document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => this.maximizeFallback());
+        } else if (document.fullscreenEnabled && viewer.requestFullscreen) {
+            viewer.requestFullscreen().catch(() => this.maximizeFallback());
         } else {
             this.maximizeFallback();
         }
@@ -206,6 +212,7 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     ngOnDestroy(): void {
         this.stopped = true;
         document.removeEventListener('fullscreenchange', this.fullscreenChange);
+        document.removeEventListener('keydown', this.fullscreenKeyDown);
         if (this.statusTimer) {
             clearInterval(this.statusTimer);
         }
@@ -297,9 +304,18 @@ export class WorkspaceComponent implements AfterViewInit, OnDestroy {
     }
 
     private maximizeFallback(): void {
-        this.maximized.update(value => !value);
+        this.maximized.set(true);
         this.notice.set('Maximized view. On iOS, use Add to Home Screen for a standalone app.');
+        requestAnimationFrame(() => this.viewport.nativeElement.querySelector('canvas')?.focus());
     }
 
-    private readonly fullscreenChange = (): void => {this.fullscreen.set(Boolean(document.fullscreenElement));};
+    private readonly fullscreenChange = (): void => {
+        this.fullscreen.set(document.fullscreenElement === this.viewport.nativeElement);
+    };
+
+    private readonly fullscreenKeyDown = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape' && this.maximized()) {
+            this.toggleFullscreen();
+        }
+    };
 }

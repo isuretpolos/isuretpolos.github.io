@@ -1,4 +1,4 @@
 {
-    "version": "1.16.0",
-    "description": "Add standalone UI3D radionics prototype and Blender tooling"
+    "version": "1.16.1",
+    "description": "Make UI3D fullscreen display only the device viewer"
 }

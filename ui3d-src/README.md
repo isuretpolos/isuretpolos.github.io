@@ -29,7 +29,8 @@ npm run preview          # Serve production output at http://127.0.0.1:4400/ui3d
 ```
 
 `deploy` prepares repository files only. It never commits or pushes. The release
-script was run once with `minor`, producing root release **1.16.0**. Ordinary
+script initially produced feature release **1.16.0**; the device-only fullscreen
+bugfix bumped it to **1.16.1**. Ordinary
 UI3D builds copy that metadata and do not bump it. Future feature/bugfix releases
 must follow root `AGENTS.md` before a production build.
 
@@ -50,8 +51,9 @@ must follow root `AGENTS.md` before a production build.
    Presets are applied to the selected runtime instance only.
 6. Add second instance and switch between instance buttons. Values and sessions
    remain independent; both use the same version-scoped preset library.
-7. Fullscreen uses the native API where available. Otherwise maximized view
-   hides secondary controls and suggests Add to Home Screen on iOS.
+7. Fullscreen expands only the 3D device viewer, with an overlaid exit button.
+   Otherwise maximized view fills the viewport with the device and hides the
+   workspace controls. Escape also exits this fallback. On iOS use Add to Home Screen.
 8. Start webcam explicitly to request permission. Stop / demo releases the
    stream and explicitly returns to browser-crypto demo graphics. Webcam bytes
    are experimental; frames and imported files never leave the browser.

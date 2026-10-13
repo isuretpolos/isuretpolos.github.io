@@ -38,6 +38,9 @@ instance starts at defaults and switching back preserves the first; manual
 camera changes viewpoint; a local GLB+JSON file chooser import activates.
 Dragging the first knob cap changed its registered root's value; Home and five
 Arrow Up presses restored 5. Fullscreen entered/exited in local Chromium.
+Device-only fullscreen was subsequently verified: the canvas fills the screen,
+workspace panels disappear, the overlaid exit button works and the normal layout
+and camera aspect return after exit.
 Production worker installed under `/ui3d/`; after stopping the preview server,
 the cached page reloaded and operated 5-7-0 broadcast successfully. The initial
 offline test found a scope-relative navigation pattern error; corrected patterns

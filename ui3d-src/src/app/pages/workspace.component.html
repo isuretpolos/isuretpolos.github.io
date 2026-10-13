@@ -1,7 +1,7 @@
 <main [class.maximized]="maximized()">
     <header>
         <div><span class="eyebrow">RADIONICS / UI3D</span><h1>{{ title() }}</h1></div>
-        <button (click)="toggleFullscreen()">{{ fullscreen() || maximized() ? 'Exit fullscreen' : 'Fullscreen' }}</button>
+        <button #fullscreenButton (click)="toggleFullscreen()">{{ fullscreen() || maximized() ? 'Exit fullscreen' : 'Fullscreen' }}</button>
     </header>
     <nav aria-label="Device workspace">
         <button (click)="camera(false)">Top view</button>
@@ -14,7 +14,11 @@
         }
         <label class="file-button">Import device pair<input type="file" multiple accept=".glb,.json" (change)="importDevice($event)" [disabled]="busy()"></label>
     </nav>
-    <section class="viewport" #viewport (dragover)="$event.preventDefault()" (drop)="drop($event)" aria-label="3D device viewer"></section>
+    <section class="viewport" #viewport (dragover)="$event.preventDefault()" (drop)="drop($event)" aria-label="3D device viewer">
+        @if (fullscreen() || maximized()) {
+            <button class="viewer-exit" (click)="toggleFullscreen()">Exit fullscreen</button>
+        }
+    </section>
     <p class="notice" role="status">{{ busy() ? 'Loading and validating…' : notice() }}</p>
     <section class="workspace-controls" aria-label="Accessible device controls">
         @for (entry of controlEntries(); track entry[0]) {
